@@ -8,10 +8,10 @@ filtered_chemicals_output = "scratch/gpfs/jg9705/IW_data/Generate_Chemical_Embed
 
 ### **STEP 1: Extract Unique Chemicals from Chemical-Protein Pairs Dataset**
 print("Reading chemical-protein dataset...")
-df = pd.read_csv(chemical_protein_file, sep="\t", usecols=["SMILES_string"])  # Keep only chemical column
+df = pd.read_csv(chemical_protein_file, sep="\t", usecols=["chemical"])  # Keep only chemical column
 
 print("Removing duplicates...")
-unique_chemicals = df["SMILES_string"].drop_duplicates().reset_index(drop=True)
+unique_chemicals = df["chemical"].drop_duplicates().reset_index(drop=True)
 
 print(f"Found {len(unique_chemicals)} unique chemicals.")
 
@@ -27,7 +27,7 @@ chunksize = 500000  # Process 500,000 rows at a time
 filtered_chunks = []
 
 for chunk in pd.read_csv(large_chemicals_file, sep="\t", chunksize=chunksize):
-    filtered_chunk = chunk[chunk["SMILES_string"].isin(unique_chemicals_set)]
+    filtered_chunk = chunk[chunk["chemical"].isin(unique_chemicals_set)]
     filtered_chunks.append(filtered_chunk)
 
 print("Concatenating filtered data...")
