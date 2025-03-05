@@ -1,8 +1,8 @@
 #!/bin/bash
+
 #SBATCH --job-name=Generate_Protein_Encodings
-#SBATCH --array=0-1  # Adjust array size as needed
-#SBATCH --output=/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/%x-%a.out
-#SBATCH --error=/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/logs/%x-%a.err
+#SBATCH --output=/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/logs/%x.out
+#SBATCH --error=/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/logs/%x.err
 #SBATCH --time=01:00:00
 #SBATCH --mem=10G
 #SBATCH --gres=gpu:1
@@ -20,8 +20,10 @@ INPUT_FASTA="/scratch/gpfs/jg9705/IW_data/gen_ideal_protein_chem_scores/9606.pro
 # Define the model file path
 MODEL_FILE="/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/esm1v_t33_650M_UR90S_1.pt"
 
-# Define the output file (include the array index in the filename)
-OUTPUT_FILE="/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings_${SLURM_ARRAY_TASK_ID}.tsv"
+# Define the output file
+OUTPUT_FILE="/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/encodings.tsv"
 
-echo "Running task ${SLURM_ARRAY_TASK_ID}: processing FASTA file ${INPUT_FASTA}"
+echo "Processing FASTA file: ${INPUT_FASTA}"
 python gen_encodings.py "${INPUT_FASTA}" "${OUTPUT_FILE}" "${MODEL_FILE}"
+
+echo "Job completed successfully!"
