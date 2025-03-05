@@ -17,6 +17,6 @@ conda activate sn-torch-env
 echo "Starting chemical filtering process..."
 
 # Run the filtering script
-python filter_chemicals.py
+python filter_chem_data.py
 
 echo "Filtering completed successfully!"
