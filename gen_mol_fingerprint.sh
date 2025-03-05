@@ -3,7 +3,7 @@
 #SBATCH --job-name=Generate_Chemical_Embeddings
 #SBATCH --output=/scratch/gpfs/jg9705/IW_data/Generate_Chemical_Embeddings/logs/%x.out
 #SBATCH --time=01:00:00
-#SBATCH --mem=10G
+#SBATCH --mem=30G
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
