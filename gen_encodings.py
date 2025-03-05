@@ -12,17 +12,21 @@ def main():
     )
     parser.add_argument("input_fasta", help="FASTA file containing protein sequences (headers should have unique protein IDs)")
     parser.add_argument("output_file", help="Output file to store protein ID, sequence, and encoding")
-    parser.add_argument("model_file", help="Path to the pretrained ESM model file")
+    parser.add_argument("model_file", help="Path to the locally downloaded ESM model file")
     args = parser.parse_args()
 
     # Set device (use GPU if available)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    # Load the ESM model and alphabet
-    model, alphabet = esm.pretrained.esm1v_t33_650M_UR90S_1()
-    model = model.to(device)
-    batch_converter = alphabet.get_batch_converter()
-    model.eval()
+    # 🔹 Load the locally stored ESM model and alphabet
+    try:
+        model, alphabet = esm.pretrained.load_model_and_alphabet_local(args.model_file)
+        model = model.to(device)
+        batch_converter = alphabet.get_batch_converter()
+        model.eval()
+    except Exception as e:
+        print(f"Error loading model from {args.model_file}: {e}")
+        sys.exit(1)
 
     # Read the FASTA file
     protein_data = []
