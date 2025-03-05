@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=Generate_Protein_Encodings
-#SBATCH --array=0-3  # Adjust array size as needed
-#SBATCH --output=/scratch/gpfs/jg9705/gen_protein_encodings/logs/%x-%a.out
-#SBATCH --error=/scratch/gpfs/jg9705/gen_protein_encodings/logs/%x-%a.err
+#SBATCH --array=0-1  # Adjust array size as needed
+#SBATCH --output=/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/%x-%a.out
+#SBATCH --error=/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/logs/%x-%a.err
 #SBATCH --time=01:00:00
 #SBATCH --mem=10G
 #SBATCH --gres=gpu:1
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=jg9705@princeton.edu
-#SBATCH -D /scratch/gpfs/jg9705/gen_protein_encodings
+#SBATCH -D /scratch/gpfs/jg9705/IW_code
 
 module purge
 module load anaconda3/2023.9
