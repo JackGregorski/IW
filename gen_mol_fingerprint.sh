@@ -13,7 +13,7 @@ module load anaconda3/2023.9
 conda activate sn-torch-env
 
 # Define input and output file paths
-INPUT_FILE="/scratch/gpfs/jg9705/IW_data/gen_ideal_protein_chem_scores/chemicals.v5.0.tsv"
+INPUT_FILE="/scratch/gpfs/jg9705/IW_data/Generate_Chemical_Embeddings/filtered_chemicals.tsv"
 OUTPUT_FILE="/scratch/gpfs/jg9704/IW_data/Generate_Chemical_Embeddings/molecular_fingerprints.txt"
 
 echo "Processing SMILES from: $INPUT_FILE"
