@@ -14,12 +14,12 @@ conda activate sn-torch-env
 
 # Define input and output file paths
 INPUT_FILE="/scratch/gpfs/jg9705/IW_data/gen_ideal_protein_chem_scores/chemicals.v5.0.tsv"
-OUTPUT_FILE="/scratch/gpfs/jg9704/IW_data/molecular_fingerprints/molecular_fingerprints.txt"
+OUTPUT_FILE="/scratch/gpfs/jg9704/IW_data/Generate_Chemical_Embeddings/molecular_fingerprints.txt"
 
 echo "Processing SMILES from: $INPUT_FILE"
 echo "Saving embeddings to: $OUTPUT_FILE"
 
 # Run the Python script
-python generate_fingerprints.py "$INPUT_FILE" "$OUTPUT_FILE"
+python gen_mol_fingerprint.py "$INPUT_FILE" "$OUTPUT_FILE"
 
 echo "Job completed successfully!"
