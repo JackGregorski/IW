@@ -1,0 +1,14 @@
+Progress to date:
+------------------------------------------
+Found and processed datasets, currently working to split the data into training and testing sets in a way that prevents data leaks.
+
+Current difficulties:
+------------------------------------------
+I am going to say none. I think I have a good plan of what to do in the following weeks and how I am going to accomplish it.
+
+Next steps:
+------------------------------------------
+- Finish splitting the data.
+- Begin training models on the data and evaluating performance
+- fine-tune models
+- Perform evaluations on our external datasets.
