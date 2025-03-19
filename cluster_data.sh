@@ -17,6 +17,6 @@ conda activate sn-torch-env
 echo "Starting protein sequence clustering..."
 
 # Run the clustering script
-python cluster_proteins.py --input /scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/encoding.tsv --output /scratch/gpfs/jg9705/IW_data/clustered_data/clustered_proteins.tsv
+python cluster_data.py --input /scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/encoding.tsv --output /scratch/gpfs/jg9705/IW_data/clustered_data/clustered_proteins.tsv
 
 echo "Protein clustering completed successfully!"

@@ -6,7 +6,7 @@ from Bio.SubsMat import MatrixInfo as mat
 from scipy.spatial.distance import pdist, squareform
 
 # Step 1: Load the .tsv file
-df = pd.read_csv("your_file.tsv", sep="\t")
+df = pd.read_csv("/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/encoding.tsv", sep="\t")
 
 # Step 2: Compute similarity (pairwise alignment scores)
 def compute_similarity(seq1, seq2):
