@@ -17,7 +17,7 @@ similarity_matrix = np.zeros((num_proteins, num_proteins))
 
 for i in range(num_proteins):
     for j in range(i+1, num_proteins):
-        sim_score = compute_similarity(df.iloc[i]['Protein Sequence'], df.iloc[j]['Protein Sequence'])
+        sim_score = compute_similarity(df.iloc[i][1], df.iloc[j][1])
         similarity_matrix[i, j] = similarity_matrix[j, i] = sim_score
 
 # Convert similarity to distance (1 - normalized similarity)
