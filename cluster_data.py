@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from Bio import pairwise2
 # Step 1: Load the .tsv file
-df = pd.read_csv("/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/encoding.tsv", sep="\t")
+df = pd.read_csv("/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/encodings.tsv", sep="\t")
 
 # Step 2: Compute similarity (pairwise alignment scores)
 def compute_similarity(seq1, seq2):
