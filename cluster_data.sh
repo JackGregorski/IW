@@ -3,8 +3,8 @@
 #SBATCH --job-name=Protein_Clustering
 #SBATCH --output=/scratch/gpfs/jg9705/IW_data/logs/protein_clustering.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_data/logs/protein_clustering.err
-#SBATCH --time=02:00:00      # Increased time limit
-#SBATCH --mem=16G            # More memory for GPU processing
+#SBATCH --time=00:02:00      # Increased time limit
+#SBATCH --mem=1G            # More memory for GPU processing
 #SBATCH --cpus-per-task=4    # Keep 4 CPUs for preprocessing
 #SBATCH --gres=gpu:1         # Request 1 GPU
 #SBATCH --partition=GPU      # Use GPU partition
