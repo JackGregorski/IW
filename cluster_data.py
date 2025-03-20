@@ -2,6 +2,12 @@ import pandas as pd
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from Bio import pairwise2
+import os
+
+# Define output path
+output_dir = "/scratch/gpfs/jg9705/IW_data/clustered_proteins"
+output_file = os.path.join(output_dir, "clustered_proteins.tsv")
+
 # Step 1: Load the .tsv file
 df = pd.read_csv("/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/encodings.tsv", sep="\t")
 
@@ -17,7 +23,7 @@ similarity_matrix = np.zeros((num_proteins, num_proteins))
 
 for i in range(num_proteins):
     for j in range(i+1, num_proteins):
-        sim_score = compute_similarity(df.iloc[i][1], df.iloc[j][1])
+        sim_score = compute_similarity(df.iloc[i, 1], df.iloc[j, 1])  # Fixed `.iloc`
         similarity_matrix[i, j] = similarity_matrix[j, i] = sim_score
 
 # Convert similarity to distance (1 - normalized similarity)
@@ -30,6 +36,6 @@ clusters = cluster_model.fit_predict(distance_matrix)
 
 # Step 4: Save results
 df["Cluster_ID"] = clusters
-df.to_csv("clustered_proteins.tsv", sep="\t", index=False)
+df.to_csv(output_file, sep="\t", index=False)
 
-print("Clustering complete! Results saved as 'clustered_proteins.tsv'.")
+print(f"Clustering complete! Results saved to {output_file}")
