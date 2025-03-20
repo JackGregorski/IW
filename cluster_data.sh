@@ -3,9 +3,9 @@
 #SBATCH --job-name=Protein_Clustering
 #SBATCH --output=/scratch/gpfs/jg9705/IW_data/logs/protein_clustering.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_data/logs/protein_clustering.err
-#SBATCH --time=01:00:00      # Adjust based on dataset size
-#SBATCH --mem=1G             # Increase memory for large datasets
-#SBATCH --cpus-per-task=1    # Use multiple CPUs for efficiency
+#SBATCH --time=08:00:00      # Adjust based on dataset size
+#SBATCH --mem=8G             # Increase memory for large datasets
+#SBATCH --cpus-per-task=4    # Use multiple CPUs for efficiency
 #SBATCH --mail-type=begin,end,fail
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
