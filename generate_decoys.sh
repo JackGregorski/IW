@@ -12,12 +12,11 @@ module purge
 module load anaconda3/2023.9
 conda activate sn-torch-env
 
-# Define script path
-SCRIPT_PATH="/scratch/gpfs/jg9705/IW_code/generate_decoys.py"
+
 
 echo "Running decoy generation script: $SCRIPT_PATH"
 
 # Run the Python script
-python "$SCRIPT_PATH"
+python generate_decoys.py
 
 echo "Decoy generation job completed!"
