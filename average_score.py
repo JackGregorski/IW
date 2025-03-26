@@ -6,5 +6,7 @@ pairs_df = pd.read_csv("/scratch/gpfs/jg9705/IW_data/gen_ideal_protein_chem_scor
 # Calculate the average score for each protein
 average_scores = pairs_df.groupby("protein")["combined_score"].mean().reset_index()
 
+#sort the average scores in descending order
+average_scores = average_scores.sort_values(by="combined_score", ascending=False)
 # Save the average scores to a new TSV file
 average_scores.to_csv("/scratch/gpfs/jg9705/IW_data/decoys/average_scores.tsv", sep="\t", index=False)
