@@ -8,6 +8,6 @@ average_scores = pairs_df.groupby("protein").agg({"combined_score": "mean", "che
 average_scores.columns = ["protein", "average_score", "count"]
 
 #sort the average scores in descending order
-average_scores = average_scores.sort_values(by="combined_score", ascending=False)
+average_scores = average_scores.sort_values(by="average_score", ascending=False)
 # Save the average scores to a new TSV file
 average_scores.to_csv("/scratch/gpfs/jg9705/IW_data/decoys/average_scores.tsv", sep="\t", index=False)
