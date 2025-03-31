@@ -6,38 +6,39 @@ def cluster_proteins(encoding_file, pair_file, output_file, num_clusters=10):
     # Load protein encodings without headers and assign custom column names
     encodings_df = pd.read_csv(encoding_file, sep='\t', header=None, dtype={2: str})
     encodings_df.columns = ['protein', 'sequence', 'encoding']
-    # Drop rows where encoding is missing
+
+    # Drop rows with missing encodings
     encodings_df = encodings_df.dropna(subset=['encoding'])
 
-    # Now safely split the encoding string
+    # Safely parse the space-separated encoding string into floats
     encoding_vectors = encodings_df['encoding'].apply(
         lambda x: list(map(float, x.strip().split())) if isinstance(x, str) else []
     )
-
-    # Drop any rows where the encoding didn't successfully parse (e.g., became empty)
     encoding_df = pd.DataFrame(encoding_vectors.tolist())
     valid_rows = encoding_df.dropna()
 
-    # Update protein_ids to match the remaining valid rows
+    # Align protein IDs with valid encoding rows
     protein_ids = encodings_df.iloc[valid_rows.index]['protein'].reset_index(drop=True)
     encoding_df = valid_rows.reset_index(drop=True)
-
 
     # Cluster using KMeans
     kmeans = KMeans(n_clusters=num_clusters, random_state=42)
     cluster_labels = kmeans.fit_predict(encoding_df)
 
-    # Create DataFrame with cluster labels
+    # Create DataFrame mapping proteins to their clusters
     protein_to_cluster = pd.DataFrame({
         'protein': protein_ids,
         'protein_cluster': cluster_labels
     })
 
-    # Load positive/negative interaction pairs
+    # Load the positive/negative interaction data
     pairs_df = pd.read_csv(pair_file, sep='\t')
 
-    # Merge clusters into the interaction data
+    # Merge cluster label into the interaction data
     merged_df = pairs_df.merge(protein_to_cluster, on='protein', how='left')
+
+    # Drop any rows that don't have a protein cluster (no encoding available)
+    merged_df = merged_df.dropna(subset=['protein_cluster'])
 
     # Save final output
     merged_df.to_csv(output_file, sep='\t', index=False)
