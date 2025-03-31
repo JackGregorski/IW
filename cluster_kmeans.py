@@ -6,13 +6,22 @@ def cluster_proteins(encoding_file, pair_file, output_file, num_clusters=10):
     # Load protein encodings without headers and assign custom column names
     encodings_df = pd.read_csv(encoding_file, sep='\t', header=None, dtype={2: str})
     encodings_df.columns = ['protein', 'sequence', 'encoding']
+    # Drop rows where encoding is missing
+    encodings_df = encodings_df.dropna(subset=['encoding'])
 
-    # Extract protein IDs and parse encoding column (assumes it's stored as space/comma-separated string)
-    protein_ids = encodings_df['protein']
+    # Now safely split the encoding string
+    encoding_vectors = encodings_df['encoding'].apply(
+        lambda x: list(map(float, x.strip().split())) if isinstance(x, str) else []
+    )
 
-    # Split the encoding string into separate dimensions
-    encoding_vectors = encodings_df['encoding'].apply(lambda x: list(map(float, x.strip().split())))
+    # Drop any rows where the encoding didn't successfully parse (e.g., became empty)
     encoding_df = pd.DataFrame(encoding_vectors.tolist())
+    valid_rows = encoding_df.dropna()
+
+    # Update protein_ids to match the remaining valid rows
+    protein_ids = encodings_df.iloc[valid_rows.index]['protein'].reset_index(drop=True)
+    encoding_df = valid_rows.reset_index(drop=True)
+
 
     # Cluster using KMeans
     kmeans = KMeans(n_clusters=num_clusters, random_state=42)
