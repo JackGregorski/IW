@@ -1,11 +1,15 @@
 import pandas as pd
 import argparse
 import random
+from collections import defaultdict
 
 # Hardcoded path to all possible chemicals
 CHEMICAL_DATASET_PATH = "/scratch/gpfs/jg9705/IW_data/Generate_Chemical_Embeddings/filtered_chemicals.tsv"  # one column: chemical
 
 def filter_and_generate_negatives(input_file, output_file, threshold):
+    # Set seed for reproducibility (optional)
+    random.seed(42)
+
     # Load input data
     df = pd.read_csv(input_file, sep='\t')
 
@@ -16,25 +20,21 @@ def filter_and_generate_negatives(input_file, output_file, threshold):
     # Load all possible chemicals
     all_chemicals_df = pd.read_csv(CHEMICAL_DATASET_PATH, sep='\t')
     all_chemicals = set(all_chemicals_df['chemical'])
-    chemical_list = list(all_chemicals)
 
-    # Get positive (chemical, protein) pairs from filtered data
-    positive_pairs = set(zip(filtered_df['chemical'], filtered_df['protein']))
-
-    # Group filtered positives by protein
-    protein_groups = filtered_df.groupby('protein')
+    # Build protein → set(chemical) mapping for fast lookup
+    protein_to_positives = defaultdict(set)
+    for _, row in filtered_df.iterrows():
+        protein_to_positives[row['protein']].add(row['chemical'])
 
     # Prepare list to collect negatives
     negative_rows = []
 
     # Generate negatives for each protein
-    for protein, group in protein_groups:
-        num_positives = len(group)
+    for protein, pos_chems in protein_to_positives.items():
+        num_positives = len(pos_chems)
         num_negatives = min(100, max(num_positives, 20))
 
-        used_chemicals = {chem for chem, prot in positive_pairs if prot == protein}
-        possible_negatives = list(all_chemicals - used_chemicals)
-
+        possible_negatives = list(all_chemicals - pos_chems)
         sampled = random.sample(possible_negatives, min(num_negatives, len(possible_negatives)))
 
         for chem in sampled:
