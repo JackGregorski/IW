@@ -25,14 +25,15 @@ def visualize_clusters(encoding_file, cluster_file, method='pca', save_path=None
     # Merge and filter to proteins with both encodings and cluster labels
     merged_df = encoding_df.merge(clusters_df, on='protein', how='inner')
 
-    # Subsample for plotting
+        # Subsample for plotting
     if len(merged_df) > max_samples:
         merged_df = merged_df.sample(n=max_samples, random_state=42)
 
-    # Split data and labels
-    X = merged_df.drop(columns=['protein', 'protein_cluster'])
-    X.columns = X.columns.astype(str)  # Ensure column names are all strings
+    # Separate features and labels
     y = merged_df['protein_cluster']
+
+    # Keep only numeric columns for dimensionality reduction
+    X = merged_df.select_dtypes(include=[float, int]).copy()
 
     # Optional: reduce to 50 dims before t-SNE/UMAP
     if method in ['tsne', 'umap']:
