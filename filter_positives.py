@@ -1,22 +1,54 @@
 import pandas as pd
 import argparse
+import random
 
-def filter_by_score(input_file, output_file, x):
-    # Read the TSV file
+# Hardcoded path to all possible chemicals
+CHEMICAL_DATASET_PATH = "/scratch/gpfs/jg9705/IW_data/Generate_Chemical_Embeddings/filtered_chemicals.tsv"  # one column: chemical
+NEGATIVES_PER_PROTEIN = 3  # Adjust as needed
+
+def filter_and_generate_negatives(input_file, output_file, threshold):
+    # Load input data
     df = pd.read_csv(input_file, sep='\t')
 
-    # Filter rows with combined_score > x
-    filtered_df = df[df['combined_score'] > x]
+    # Filter based on threshold
+    filtered_df = df[df['combined_score'] > threshold]
 
-    # Save to output file
-    filtered_df.to_csv(output_file, sep='\t', index=False)
-    print(f"Filtered data saved to {output_file}")
+    # Load all possible chemicals
+    all_chemicals_df = pd.read_csv(CHEMICAL_DATASET_PATH, sep='\t')
+    all_chemicals = set(all_chemicals_df['chemical'])
+
+    # Get existing positive (chemical, protein) pairs
+    positive_pairs = set(zip(df['chemical'], df['protein']))
+
+    # Prepare list to collect negatives
+    negative_rows = []
+
+    # Generate negatives for each unique protein
+    for protein in filtered_df['protein'].unique():
+        selected = 0
+        attempts = 0
+        max_attempts = 10 * NEGATIVES_PER_PROTEIN  # prevent infinite loops
+
+        while selected < NEGATIVES_PER_PROTEIN and attempts < max_attempts:
+            candidate = random.choice(list(all_chemicals))
+            if (candidate, protein) not in positive_pairs:
+                negative_rows.append({'chemical': candidate, 'protein': protein, 'combined_score': 0})
+                selected += 1
+            attempts += 1
+
+    # Combine positives and negatives
+    negatives_df = pd.DataFrame(negative_rows)
+    combined_df = pd.concat([filtered_df, negatives_df], ignore_index=True)
+
+    # Save output
+    combined_df.to_csv(output_file, sep='\t', index=False)
+    print(f"Saved filtered positives and generated negatives to {output_file}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Filter protein-chemical interactions by combined_score.")
+    parser = argparse.ArgumentParser(description="Filter by score and generate negatives.")
     parser.add_argument("input_file", help="Path to the input .tsv file")
     parser.add_argument("output_file", help="Path for the output .tsv file")
     parser.add_argument("threshold", type=int, help="Minimum combined_score to keep")
 
     args = parser.parse_args()
-    filter_by_score(args.input_file, args.output_file, args.threshold)
+    filter_and_generate_negatives(args.input_file, args.output_file, args.threshold)
