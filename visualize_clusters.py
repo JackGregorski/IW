@@ -27,6 +27,10 @@ def visualize_clusters(encoding_file, cluster_file, method='pca', save_path=None
 
     # Separate data and labels
     X = merged_df.drop(columns=['protein', 'protein_cluster'])
+    X.columns = X.columns.astype(str)
+    print("X dtypes:\n", X.dtypes)
+    print("X columns:", X.columns.tolist()[:5])
+
     y = merged_df['protein_cluster']
 
     # Choose dimensionality reduction method
