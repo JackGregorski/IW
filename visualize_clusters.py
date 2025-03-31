@@ -1,18 +1,35 @@
 import pandas as pd
-from sklearn.cluster import KMeans
+import argparse
 from sklearn.decomposition import PCA
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Optional: for better separation
-# from sklearn.manifold import TSNE
-# import umap
+def visualize_clusters(encoding_file, cluster_file, method='pca', save_path=None):
+    # Load protein encodings (no headers, 3 columns)
+    encodings_df = pd.read_csv(encoding_file, sep='\t', header=None, dtype={2: str})
+    encodings_df.columns = ['protein', 'sequence', 'encoding']
+    encodings_df = encodings_df.dropna(subset=['encoding'])
 
-# Load your encoding data (after parsing and validating it as you already do)
-# Example: encoding_df is the DataFrame with shape (n_proteins, n_features)
-#          cluster_labels is a list or array with cluster ID for each protein
+    # Parse encoding into list of floats
+    encoding_vectors = encodings_df['encoding'].apply(
+        lambda x: list(map(float, x.strip().split())) if isinstance(x, str) else []
+    )
+    encoding_df = pd.DataFrame(encoding_vectors.tolist())
+    encoding_df['protein'] = encodings_df['protein'].values
 
-def visualize_clusters(encoding_df, cluster_labels, method='pca', save_path=None):
+    # Load cluster labels (with headers: protein, protein_cluster)
+    clusters_df = pd.read_csv(cluster_file, sep='\t')
+
+    # Merge on protein
+    merged_df = encoding_df.merge(clusters_df, on='protein', how='inner')
+
+    # Separate data and labels
+    X = merged_df.drop(columns=['protein', 'protein_cluster'])
+    y = merged_df['protein_cluster']
+
+    # Choose dimensionality reduction method
     if method == 'pca':
         reducer = PCA(n_components=2)
     elif method == 'tsne':
@@ -24,9 +41,9 @@ def visualize_clusters(encoding_df, cluster_labels, method='pca', save_path=None
     else:
         raise ValueError("Unsupported method. Choose 'pca', 'tsne', or 'umap'.")
 
-    reduced = reducer.fit_transform(encoding_df)
+    reduced = reducer.fit_transform(X)
     reduced_df = pd.DataFrame(reduced, columns=['x', 'y'])
-    reduced_df['cluster'] = cluster_labels
+    reduced_df['cluster'] = y.values
 
     # Plot
     plt.figure(figsize=(8, 6))
@@ -41,3 +58,13 @@ def visualize_clusters(encoding_df, cluster_labels, method='pca', save_path=None
         print(f"Saved visualization to {save_path}")
     else:
         plt.show()
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Visualize protein clusters with PCA/TSNE/UMAP.")
+    parser.add_argument("encoding_file", help="Path to encoding .tsv (no headers: protein, sequence, encoding)")
+    parser.add_argument("cluster_file", help="Path to cluster assignment .tsv (with protein and protein_cluster columns)")
+    parser.add_argument("save_path", help="Path to save output plot (e.g. output.png)")
+    parser.add_argument("--method", choices=["pca", "tsne", "umap"], default="pca", help="Dimensionality reduction method")
+
+    args = parser.parse_args()
+    visualize_clusters(args.encoding_file, args.cluster_file, args.method, args.save_path)
