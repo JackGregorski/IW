@@ -4,7 +4,7 @@ import random
 
 # Hardcoded path to all possible chemicals
 CHEMICAL_DATASET_PATH = "/scratch/gpfs/jg9705/IW_data/Generate_Chemical_Embeddings/filtered_chemicals.tsv"  # one column: chemical
-NEGATIVES_PER_PROTEIN = 3  # Adjust as needed
+NEGATIVES_PER_PROTEIN = 12  # Adjust as needed
 
 def filter_and_generate_negatives(input_file, output_file, threshold):
     # Load input data
@@ -16,6 +16,7 @@ def filter_and_generate_negatives(input_file, output_file, threshold):
     # Load all possible chemicals
     all_chemicals_df = pd.read_csv(CHEMICAL_DATASET_PATH, sep='\t')
     all_chemicals = set(all_chemicals_df['chemical'])
+    chemical_list = list(all_chemicals)
 
     # Get existing positive (chemical, protein) pairs
     positive_pairs = set(zip(df['chemical'], df['protein']))
@@ -30,7 +31,7 @@ def filter_and_generate_negatives(input_file, output_file, threshold):
         max_attempts = 10 * NEGATIVES_PER_PROTEIN  # prevent infinite loops
 
         while selected < NEGATIVES_PER_PROTEIN and attempts < max_attempts:
-            candidate = random.choice(list(all_chemicals))
+            candidate = random.choice(chemical_list)
             if (candidate, protein) not in positive_pairs:
                 negative_rows.append({'chemical': candidate, 'protein': protein, 'combined_score': 0})
                 selected += 1
