@@ -12,30 +12,32 @@ def visualize_clusters(encoding_file, cluster_file, method='pca', save_path=None
     encodings_df.columns = ['protein', 'sequence', 'encoding']
     encodings_df = encodings_df.dropna(subset=['encoding'])
 
-    # Parse encodings into float lists
+    # Parse encodings into float vectors
     encoding_vectors = encodings_df['encoding'].apply(
         lambda x: list(map(float, x.strip().split())) if isinstance(x, str) else []
     )
     encoding_df = pd.DataFrame(encoding_vectors.tolist())
     encoding_df['protein'] = encodings_df['protein'].values
 
-    # Load cluster assignments
+    # Load cluster assignments and remove duplicates (one row per protein)
     clusters_df = pd.read_csv(cluster_file, sep='\t')
+    clusters_df = clusters_df[['protein', 'protein_cluster']].drop_duplicates()
+    clusters_df['protein_cluster'] = clusters_df['protein_cluster'].astype(int)
 
-    # Merge and filter to proteins with both encodings and cluster labels
+    # Merge encoding and cluster data
     merged_df = encoding_df.merge(clusters_df, on='protein', how='inner')
 
-        # Subsample for plotting
+    # Subsample to avoid high memory usage
     if len(merged_df) > max_samples:
         merged_df = merged_df.sample(n=max_samples, random_state=42)
 
-    # Separate features and labels
+    # Separate features and cluster labels
     y = merged_df['protein_cluster']
+    X = merged_df.drop(columns=['protein', 'protein_cluster'])
+    X = X.select_dtypes(include=[float, int]).copy()
+    X.columns = X.columns.astype(str)
 
-    # Keep only numeric columns for dimensionality reduction
-    X = merged_df.select_dtypes(include=[float, int]).copy()
-
-    # Optional: reduce to 50 dims before t-SNE/UMAP
+    # Optional: reduce to 50 dims before UMAP/t-SNE
     if method in ['tsne', 'umap']:
         pca_50 = PCA(n_components=50, random_state=42)
         X = pca_50.fit_transform(X)
@@ -64,6 +66,7 @@ def visualize_clusters(encoding_file, cluster_file, method='pca', save_path=None
     plt.ylabel("Component 2")
     plt.legend(title="Cluster", bbox_to_anchor=(1.05, 1), loc='upper left')
 
+    # Save or show
     if save_path:
         import os
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
