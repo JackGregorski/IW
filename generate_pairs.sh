@@ -17,8 +17,8 @@ conda activate sn-torch-env
 echo "Starting filtering and negative generation..."
 
 # Set input/output file paths and score threshold
-INPUT_FILE="/scratch/gpfs/jg9705/IW_data/input_pairs.tsv"
-OUTPUT_FILE="/scratch/gpfs/jg9705/IW_data/filtered_pairs_with_negatives.tsv"
+INPUT_FILE="/scratch/gpfs/jg9705/IW_data/gen_ideal_protein_chem_scores/9606.protein_chemical.links.v5.0.tsv"
+OUTPUT_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/positives.tsv"
 THRESHOLD=800
 
 # Run the script
