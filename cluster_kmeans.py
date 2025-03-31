@@ -4,7 +4,7 @@ from sklearn.cluster import KMeans
 
 def cluster_proteins(encoding_file, pair_file, output_file, num_clusters=10):
     # Load protein encodings without headers and assign custom column names
-    encodings_df = pd.read_csv(encoding_file, sep='\t', header=None)
+    encodings_df = pd.read_csv(encoding_file, sep='\t', header=None, dtype={2: str})
     encodings_df.columns = ['protein', 'sequence', 'encoding']
 
     # Extract protein IDs and parse encoding column (assumes it's stored as space/comma-separated string)
