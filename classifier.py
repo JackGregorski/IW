@@ -44,7 +44,7 @@ class InteractionClassifier(nn.Module):
     def forward(self, x):
         return self.model(x).squeeze()
 
-# Utility to load embeddings
+# Load embedding files
 def load_embedding_file(path, has_header=False, embedding_col=1):
     lookup = {}
     with open(path, 'r') as f:
@@ -56,11 +56,8 @@ def load_embedding_file(path, has_header=False, embedding_col=1):
                 continue
             key = parts[0]
             embedding_str = parts[embedding_col].strip()
-
             if embedding_str == "NA":
-                print(f"Skipping {key} because embedding is NA.")
                 continue
-
             try:
                 vec = torch.tensor([float(x) for x in embedding_str.split()], dtype=torch.float32)
                 lookup[key] = vec
@@ -68,6 +65,17 @@ def load_embedding_file(path, has_header=False, embedding_col=1):
                 print(f"Skipping {key} due to conversion error: {e}")
     print(f"Loaded {len(lookup)} entries from {path}")
     return lookup
+
+# Filter out rows with missing embeddings
+def filter_pairs(df, chem_lookup, prot_lookup):
+    original_len = len(df)
+    valid_df = df[
+        df["chemical"].isin(chem_lookup.keys()) &
+        df["protein"].isin(prot_lookup.keys())
+    ]
+    dropped = original_len - len(valid_df)
+    print(f"Filtered out {dropped} rows without valid embeddings.")
+    return valid_df
 
 # Training loop
 def train_model(model, train_loader, val_loader, epochs=10, lr=1e-3):
@@ -111,29 +119,35 @@ def main():
     parser.add_argument("--prot_emb", required=True)
     args = parser.parse_args()
 
+    # Load data
     train_df = pd.read_csv(args.train, sep="\t")
     val_df = pd.read_csv(args.val, sep="\t")
 
     chem_lookup = load_embedding_file(args.chem_fp, has_header=False, embedding_col=1)
     prot_lookup = load_embedding_file(args.prot_emb, has_header=False, embedding_col=2)
 
-    # Sanity checks
-    if not chem_lookup:
-        raise ValueError("No chemical embeddings were loaded. Check format or path.")
-    if not prot_lookup:
-        raise ValueError("No protein embeddings were loaded. Check format or path.")
+    # Check for missing keys
+    print(f"Checking embedding coverage in train and val sets...")
 
-    print("Sample chemical ID:", next(iter(chem_lookup.keys())))
-    print("Sample protein ID:", next(iter(prot_lookup.keys())))
+    train_df = filter_pairs(train_df, chem_lookup, prot_lookup)
+    val_df = filter_pairs(val_df, chem_lookup, prot_lookup)
 
+    if train_df.empty:
+        raise ValueError("Training dataset is empty after filtering.")
+    if val_df.empty:
+        raise ValueError("Validation dataset is empty after filtering.")
+
+    # Get embedding dimension
     input_dim = len(next(iter(chem_lookup.values()))) + len(next(iter(prot_lookup.values())))
     print(f"Input dimension: {input_dim}")
 
+    # Create datasets/loaders
     train_dataset = InteractionDataset(train_df, chem_lookup, prot_lookup)
     val_dataset = InteractionDataset(val_df, chem_lookup, prot_lookup)
     train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=64)
 
+    # Train the model
     model = InteractionClassifier(input_dim)
     train_model(model, train_loader, val_loader)
 
