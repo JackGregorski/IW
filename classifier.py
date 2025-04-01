@@ -50,9 +50,15 @@ def load_embedding_file(path):
     with open(path, 'r') as f:
         for line in f:
             parts = line.strip().split('\t')
-            key = parts[0]
-            vec = torch.tensor([float(x) for x in parts[1].split()], dtype=torch.float32)
-            lookup[key] = vec
+            if len(parts) < 3:
+                continue  # Skip malformed lines
+            key = parts[0]  # protein ID
+            embedding_str = parts[2]  # third column = embedding
+            try:
+                vec = torch.tensor([float(x) for x in embedding_str.split()], dtype=torch.float32)
+                lookup[key] = vec
+            except ValueError as e:
+                print(f"Skipping {key} due to conversion error: {e}")
     return lookup
 
 # Training loop
