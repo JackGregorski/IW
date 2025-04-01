@@ -45,15 +45,22 @@ class InteractionClassifier(nn.Module):
         return self.model(x).squeeze()
 
 # Utility to load embeddings
-def load_embedding_file(path):
+def load_embedding_file(path, has_header=False, embedding_col=2):
     lookup = {}
     with open(path, 'r') as f:
+        if has_header:
+            next(f)
         for line in f:
             parts = line.strip().split('\t')
-            if len(parts) < 3:
-                continue  # Skip malformed lines
-            key = parts[0]  # protein ID
-            embedding_str = parts[2]  # third column = embedding
+            if len(parts) <= embedding_col:
+                continue
+            key = parts[0]
+            embedding_str = parts[embedding_col].strip()
+
+            if embedding_str == "NA":
+                print(f"Skipping {key} because embedding is NA.")
+                continue
+
             try:
                 vec = torch.tensor([float(x) for x in embedding_str.split()], dtype=torch.float32)
                 lookup[key] = vec
