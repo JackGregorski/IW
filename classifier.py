@@ -45,7 +45,7 @@ class InteractionClassifier(nn.Module):
         return self.model(x).squeeze()
 
 # Utility to load embeddings
-def load_embedding_file(path, has_header=False, embedding_col=2):
+def load_embedding_file(path, has_header=False, embedding_col=1):
     lookup = {}
     with open(path, 'r') as f:
         if has_header:
@@ -66,6 +66,7 @@ def load_embedding_file(path, has_header=False, embedding_col=2):
                 lookup[key] = vec
             except ValueError as e:
                 print(f"Skipping {key} due to conversion error: {e}")
+    print(f"Loaded {len(lookup)} entries from {path}")
     return lookup
 
 # Training loop
@@ -113,8 +114,17 @@ def main():
     train_df = pd.read_csv(args.train, sep="\t")
     val_df = pd.read_csv(args.val, sep="\t")
 
-    chem_lookup = load_embedding_file(args.chem_fp)
-    prot_lookup = load_embedding_file(args.prot_emb)
+    chem_lookup = load_embedding_file(args.chem_fp, has_header=False, embedding_col=1)
+    prot_lookup = load_embedding_file(args.prot_emb, has_header=False, embedding_col=2)
+
+    # Sanity checks
+    if not chem_lookup:
+        raise ValueError("No chemical embeddings were loaded. Check format or path.")
+    if not prot_lookup:
+        raise ValueError("No protein embeddings were loaded. Check format or path.")
+
+    print("Sample chemical ID:", next(iter(chem_lookup.keys())))
+    print("Sample protein ID:", next(iter(prot_lookup.keys())))
 
     input_dim = len(next(iter(chem_lookup.values()))) + len(next(iter(prot_lookup.values())))
     print(f"Input dimension: {input_dim}")
