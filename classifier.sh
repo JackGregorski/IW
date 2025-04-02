@@ -3,9 +3,8 @@
 #SBATCH --job-name=Train_Interaction_Classifier
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
-#SBATCH --time=04:00:00            # Increased time for Optuna trials
-#SBATCH --mem=24G                  # Optional: increase for safety during tuning
-#SBATCH --gres=gpu:1
+#SBATCH --time=00:40:00
+#SBATCH --mem=12G
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
