@@ -3,8 +3,9 @@
 #SBATCH --job-name=Train_Interaction_Classifier
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
-#SBATCH --time=00:40:00
+#SBATCH --time=02:00:00
 #SBATCH --mem=12G
+#SBATCH --gres=gpu:1
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
