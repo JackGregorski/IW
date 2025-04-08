@@ -108,7 +108,7 @@ def objective(trial, input_dim, train_dataset, val_dataset):
     hidden1 = trial.suggest_int("hidden1", 128, 1024)
     hidden2 = trial.suggest_int("hidden2", 64, hidden1)
     dropout = trial.suggest_float("dropout", 0.1, 0.5)
-    lr = trial.suggest_loguniform("lr", 1e-5, 1e-2)
+    lr = trial.suggest_float("lr", 1e-5, 1e-2,log=True)
     batch_size = trial.suggest_categorical("batch_size", [32, 64, 128])
     epochs = trial.suggest_int("epochs", 5, 20)
 
