@@ -5,8 +5,6 @@
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
 #SBATCH --time=02:00:00
 #SBATCH --mem=16G
-
-#SBATCH --gres=gpu:1g.20gb:1
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
