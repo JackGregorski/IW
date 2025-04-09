@@ -7,6 +7,7 @@
 #SBATCH --mem=32G                         # Increased for GPU support
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
+#SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=1
 #SBATCH --partition=mig         # Or gpu-medium / gpu-long if needed
 #SBATCH --mail-type=BEGIN,END,FAIL
