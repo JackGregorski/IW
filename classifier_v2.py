@@ -308,8 +308,8 @@ def main():
     test_loader = DataLoader(test_dataset, batch_size=study.best_params['batch_size'], num_workers=4)
 
     train_eval_model(model, train_loader, test_loader, study.best_params['epochs'], study.best_params['lr'], device)
-    evaluate_model(model, test_loader, args.out_dir)
     run_benchmarks(train_df, test_df, chem_lookup, prot_lookup, args.out_dir)
+    evaluate_model(model, test_loader, args.out_dir)
 
 if __name__ == "__main__":
     main()

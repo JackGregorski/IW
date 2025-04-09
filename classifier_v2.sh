@@ -3,11 +3,11 @@
 #SBATCH --job-name=Enhanced_Interaction_Classifier
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
-#SBATCH --time=02:00:00
+#SBATCH --time=01:00:00
 #SBATCH --mem=32G                         # Increased for GPU support
 #SBATCH --cpus-per-task=4                # Helps with DataLoader
 #SBATCH --gres=gpu:1                     # 🔥 Request 1 GPU
-#SBATCH --partition=gpu-short            # Or gpu-medium / gpu-long if needed
+#SBATCH --partition=mig           # Or gpu-medium / gpu-long if needed
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
