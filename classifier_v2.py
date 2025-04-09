@@ -137,15 +137,26 @@ def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_
 # Objective
 
 def objective(trial, input_dim, train_dataset, val_dataset):
-    hidden_layers = trial.suggest_categorical("hidden_sizes", [[512], [512, 256], [512, 256, 128]])
+    # Dynamically choose the number of hidden layers
+    num_layers = trial.suggest_int("num_hidden_layers", 1, 4)
+
+    # Dynamically choose the size of each layer
+    hidden_layers = tuple(
+        trial.suggest_int(f"n_units_layer_{i}", 64, 1024, step=64)
+        for i in range(num_layers)
+    )
+
+    # Other hyperparameters
     dropout = trial.suggest_float("dropout", 0.1, 0.5)
     lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)
     batch_size = trial.suggest_categorical("batch_size", [32, 64, 128])
     epochs = trial.suggest_int("epochs", 5, 25)
 
+    # DataLoaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, num_workers=4)
 
+    # Model and training
     model = InteractionClassifier(input_dim, hidden_layers, dropout)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -181,30 +192,45 @@ def evaluate_model(model, test_loader, out_dir):
     with open(os.path.join(out_dir, "results.json"), "w") as f:
         json.dump(metrics, f, indent=4)
 
+    # Load benchmark results if available
+    benchmark_path = os.path.join(out_dir, "benchmarks.json")
+    benchmarks = {}
+    if os.path.exists(benchmark_path):
+        with open(benchmark_path) as f:
+            benchmarks = json.load(f)
+
     # ROC Curve
     fpr, tpr, _ = roc_curve(all_labels, all_preds)
     plt.figure()
-    plt.plot(fpr, tpr)
+    plt.plot(fpr, tpr, label="Classifier (AUC = %.3f)" % metrics["roc_auc"])
+    for name, stats in benchmarks.items():
+        plt.plot([0, 1], [stats["roc_auc"]] * 2, '--', label=f"{name} (AUC = {stats['roc_auc']:.3f})")
     plt.title("ROC Curve")
     plt.xlabel("FPR")
     plt.ylabel("TPR")
+    plt.legend()
     plt.savefig(os.path.join(out_dir, "roc_curve.png"))
 
     # Precision-Recall Curve
     prec, rec, _ = precision_recall_curve(all_labels, all_preds)
     plt.figure()
-    plt.plot(rec, prec)
+    plt.plot(rec, prec, label="Classifier")
+    for name, stats in benchmarks.items():
+        plt.hlines(stats["f1"], 0, 1, linestyle="--", label=f"{name} (F1 = {stats['f1']:.3f})")
     plt.title("Precision-Recall Curve")
     plt.xlabel("Recall")
     plt.ylabel("Precision")
+    plt.legend()
     plt.savefig(os.path.join(out_dir, "precision_recall.png"))
 
     # Confusion matrix
     cm = confusion_matrix(all_labels, binary_preds)
     plt.figure()
     plt.imshow(cm, cmap='Blues')
-    plt.title("Confusion Matrix")
+    plt.title("Confusion Matrix\nAcc: %.3f | F1: %.3f" % (metrics["accuracy"], metrics["f1"]))
     plt.colorbar()
+    plt.xticks([0, 1], ["Pred 0", "Pred 1"])
+    plt.yticks([0, 1], ["True 0", "True 1"])
     plt.savefig(os.path.join(out_dir, "confusion_matrix.png"))
 
 # Benchmarks
