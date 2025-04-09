@@ -3,7 +3,7 @@
 #SBATCH --job-name=Enhanced_Interaction_Classifier
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
-#SBATCH --time=04:00:00
+#SBATCH --time=02:00:00
 #SBATCH --mem=16G
 #SBATCH --gres=gpu:1
 #SBATCH --mail-type=begin,end
