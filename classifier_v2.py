@@ -143,8 +143,8 @@ def objective(trial, input_dim, train_dataset, val_dataset):
     batch_size = trial.suggest_categorical("batch_size", [32, 64, 128])
     epochs = trial.suggest_int("epochs", 5, 25)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, num_workers=4)
 
     model = InteractionClassifier(input_dim, hidden_layers, dropout)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -278,8 +278,8 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    train_loader = DataLoader(train_dataset, batch_size=study.best_params['batch_size'], shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=study.best_params['batch_size'])
+    train_loader = DataLoader(train_dataset, batch_size=study.best_params['batch_size'], shuffle=True, num_workers=4)
+    test_loader = DataLoader(test_dataset, batch_size=study.best_params['batch_size'], num_workers=4)
 
     train_eval_model(model, train_loader, test_loader, study.best_params['epochs'], study.best_params['lr'], device)
     evaluate_model(model, test_loader, args.out_dir)
