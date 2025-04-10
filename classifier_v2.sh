@@ -4,12 +4,12 @@
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
 #SBATCH --time=01:00:00
-#SBATCH --mem=32G                         # Increased for GPU support
+#SBATCH --mem=20G
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=1
-#SBATCH --partition=mig         # Or gpu-medium / gpu-long if needed
+#SBATCH --gres=gpu:1g.10gb:1
+#SBATCH --partition=mig
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
