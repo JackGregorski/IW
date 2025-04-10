@@ -203,8 +203,14 @@ def evaluate_model(model, test_loader, out_dir):
     fpr, tpr, _ = roc_curve(all_labels, all_preds)
     plt.figure()
     plt.plot(fpr, tpr, label="Classifier (AUC = %.3f)" % metrics["roc_auc"])
-    for name, stats in benchmarks.items():
-        plt.plot([0, 1], [stats["roc_auc"]] * 2, '--', label=f"{name} (AUC = {stats['roc_auc']:.3f})")
+
+    for name in ["dummy", "logreg"]:
+        key = f"{name}_probs"
+        if key in benchmarks:
+            bench_probs = benchmarks[key]
+            fpr_b, tpr_b, _ = roc_curve(all_labels, bench_probs)
+            auc_b = roc_auc_score(all_labels, bench_probs)
+            plt.plot(fpr_b, tpr_b, linestyle="--", label=f"{name} (AUC = {auc_b:.3f})")
 
     plt.title("ROC Curve")
     plt.xlabel("FPR")
@@ -213,15 +219,14 @@ def evaluate_model(model, test_loader, out_dir):
     plt.savefig(os.path.join(out_dir, "roc_curve.png"))
 
     # Precision-Recall Curve
-    # Precision-Recall Curve
     prec, rec, _ = precision_recall_curve(all_labels, all_preds)
     plt.figure()
     plt.plot(rec, prec, label="Classifier")
 
-    # Add benchmark PR curves
     for name in ["dummy", "logreg"]:
-        if f"{name}_probs" in benchmarks:
-            bench_probs = benchmarks[f"{name}_probs"]
+        key = f"{name}_probs"
+        if key in benchmarks:
+            bench_probs = benchmarks[key]
             prec_b, rec_b, _ = precision_recall_curve(all_labels, bench_probs)
             f1_b = f1_score(all_labels, [1 if p >= 0.5 else 0 for p in bench_probs])
             plt.plot(rec_b, prec_b, linestyle="--", label=f"{name} (F1 = {f1_b:.3f})")
