@@ -309,7 +309,9 @@ def main():
 
     print("Best hyperparameters:", study.best_params)
 
-    model = InteractionClassifier(input_dim, study.best_params['hidden_sizes'], study.best_params['dropout'])
+    num_layers = study.best_params["num_hidden_layers"]
+    hidden_sizes = [study.best_params[f"n_units_layer_{i}"] for i in range(num_layers)]
+    model = InteractionClassifier(input_dim, hidden_sizes, study.best_params["dropout"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
