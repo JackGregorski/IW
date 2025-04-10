@@ -205,6 +205,7 @@ def evaluate_model(model, test_loader, out_dir):
     plt.plot(fpr, tpr, label="Classifier (AUC = %.3f)" % metrics["roc_auc"])
     for name, stats in benchmarks.items():
         plt.plot([0, 1], [stats["roc_auc"]] * 2, '--', label=f"{name} (AUC = {stats['roc_auc']:.3f})")
+
     plt.title("ROC Curve")
     plt.xlabel("FPR")
     plt.ylabel("TPR")
@@ -212,11 +213,19 @@ def evaluate_model(model, test_loader, out_dir):
     plt.savefig(os.path.join(out_dir, "roc_curve.png"))
 
     # Precision-Recall Curve
+    # Precision-Recall Curve
     prec, rec, _ = precision_recall_curve(all_labels, all_preds)
     plt.figure()
     plt.plot(rec, prec, label="Classifier")
-    for name, stats in benchmarks.items():
-        plt.hlines(stats["f1"], 0, 1, linestyle="--", label=f"{name} (F1 = {stats['f1']:.3f})")
+
+    # Add benchmark PR curves
+    for name in ["dummy", "logreg"]:
+        if f"{name}_probs" in benchmarks:
+            bench_probs = benchmarks[f"{name}_probs"]
+            prec_b, rec_b, _ = precision_recall_curve(all_labels, bench_probs)
+            f1_b = f1_score(all_labels, [1 if p >= 0.5 else 0 for p in bench_probs])
+            plt.plot(rec_b, prec_b, linestyle="--", label=f"{name} (F1 = {f1_b:.3f})")
+
     plt.title("Precision-Recall Curve")
     plt.xlabel("Recall")
     plt.ylabel("Precision")
@@ -258,11 +267,11 @@ def run_benchmarks(train_df, test_df, chem_lookup, prot_lookup, out_dir):
         probs = clf.predict_proba(X_test)[:, 1]
         preds = clf.predict(X_test)
         results[name] = {
-            "accuracy": accuracy_score(y_test, preds),
-            "f1": f1_score(y_test, preds),
-            "roc_auc": roc_auc_score(y_test, probs)
-        }
-
+    "accuracy": accuracy_score(y_test, preds),
+    "f1": f1_score(y_test, preds),
+    "roc_auc": roc_auc_score(y_test, probs),
+    f"{name}_probs": probs.tolist()
+}
     with open(os.path.join(out_dir, "benchmarks.json"), "w") as f:
         json.dump(results, f, indent=4)
 
