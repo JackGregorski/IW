@@ -4,7 +4,7 @@
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
 #SBATCH --time=01:00:00
-#SBATCH --mem=16G                         # Increased for GPU support
+#SBATCH --mem=32G                         # Increased for GPU support
 #SBATCH --cpus-per-task=4                # Helps with DataLoader
 #SBATCH --gres=gpu:1                     #  Request 1 GPU
 #SBATCH --partition=gpu-short            # Or gpu-medium / gpu-long if needed
