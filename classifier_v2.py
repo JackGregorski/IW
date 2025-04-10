@@ -196,8 +196,12 @@ def evaluate_model(model, test_loader, out_dir):
     benchmark_path = os.path.join(out_dir, "benchmarks.json")
     benchmarks = {}
     if os.path.exists(benchmark_path):
+        print(f"Found benchmark file at {benchmark_path}")
         with open(benchmark_path) as f:
             benchmarks = json.load(f)
+            print(f"Loaded benchmarks: {list(benchmarks.keys())}")
+    else:
+        print(f"Benchmark file not found at {benchmark_path}")
 
     # ROC Curve
     fpr, tpr, _ = roc_curve(all_labels, all_preds)
@@ -207,10 +211,13 @@ def evaluate_model(model, test_loader, out_dir):
     for name in ["dummy", "logreg"]:
         key = f"{name}_probs"
         if key in benchmarks:
+            print(f"Plotting {name} benchmark")
             bench_probs = benchmarks[key]
             fpr_b, tpr_b, _ = roc_curve(all_labels, bench_probs)
             auc_b = roc_auc_score(all_labels, bench_probs)
             plt.plot(fpr_b, tpr_b, linestyle="--", label=f"{name} (AUC = {auc_b:.3f})")
+        else:
+            print(f"Missing {key} in benchmarks")
 
     plt.title("ROC Curve")
     plt.xlabel("FPR")
@@ -226,10 +233,13 @@ def evaluate_model(model, test_loader, out_dir):
     for name in ["dummy", "logreg"]:
         key = f"{name}_probs"
         if key in benchmarks:
+            print(f"Plotting {name} benchmark for PR curve")
             bench_probs = benchmarks[key]
             prec_b, rec_b, _ = precision_recall_curve(all_labels, bench_probs)
             f1_b = f1_score(all_labels, [1 if p >= 0.5 else 0 for p in bench_probs])
             plt.plot(rec_b, prec_b, linestyle="--", label=f"{name} (F1 = {f1_b:.3f})")
+        else:
+            print(f"Missing {key} in benchmarks for PR curve")
 
     plt.title("Precision-Recall Curve")
     plt.xlabel("Recall")
@@ -268,17 +278,23 @@ def run_benchmarks(train_df, test_df, chem_lookup, prot_lookup, out_dir):
         "dummy": DummyClassifier(strategy="most_frequent"),
         "logreg": LogisticRegression(max_iter=1000)
     }.items():
+        print(f"Training {name} benchmark model...")
         clf.fit(X_train, y_train)
         probs = clf.predict_proba(X_test)[:, 1]
         preds = clf.predict(X_test)
         results[name] = {
-    "accuracy": accuracy_score(y_test, preds),
-    "f1": f1_score(y_test, preds),
-    "roc_auc": roc_auc_score(y_test, probs),
-    f"{name}_probs": probs.tolist()
-}
-    with open(os.path.join(out_dir, "benchmarks.json"), "w") as f:
+            "accuracy": accuracy_score(y_test, preds),
+            "f1": f1_score(y_test, preds),
+            "roc_auc": roc_auc_score(y_test, probs),
+            f"{name}_probs": probs.tolist()
+        }
+        print(f"Completed {name} benchmark with accuracy: {results[name]['accuracy']:.4f}")
+
+    benchmark_path = os.path.join(out_dir, "benchmarks.json")
+    print(f"Saving benchmark results to {benchmark_path}")
+    with open(benchmark_path, "w") as f:
         json.dump(results, f, indent=4)
+    print(f"Benchmark results saved with keys: {list(results.keys())}")
 
 # Main
 
