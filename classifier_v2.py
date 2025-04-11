@@ -282,19 +282,20 @@ def run_benchmarks(train_df, test_df, chem_lookup, prot_lookup, out_dir):
         clf.fit(X_train, y_train)
         probs = clf.predict_proba(X_test)[:, 1]
         preds = clf.predict(X_test)
-        results[name] = {
-            "accuracy": accuracy_score(y_test, preds),
-            "f1": f1_score(y_test, preds),
-            "roc_auc": roc_auc_score(y_test, probs),
-            f"{name}_probs": probs.tolist()
-        }
-        print(f"Completed {name} benchmark with accuracy: {results[name]['accuracy']:.4f}")
+
+        results[f"{name}_accuracy"] = accuracy_score(y_test, preds)
+        results[f"{name}_f1"] = f1_score(y_test, preds)
+        results[f"{name}_roc_auc"] = roc_auc_score(y_test, probs)
+        results[f"{name}_probs"] = probs.tolist()
+
+        print(f"Completed {name} benchmark with accuracy: {results[f'{name}_accuracy']:.4f}")
 
     benchmark_path = os.path.join(out_dir, "benchmarks.json")
     print(f"Saving benchmark results to {benchmark_path}")
     with open(benchmark_path, "w") as f:
         json.dump(results, f, indent=4)
     print(f"Benchmark results saved with keys: {list(results.keys())}")
+
 
 # Main
 
