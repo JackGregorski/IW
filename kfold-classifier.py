@@ -244,15 +244,6 @@ def evaluate_model(model, test_loader, out_dir, logistic_regression_results=None
     plt.legend()
     plt.savefig(os.path.join(out_dir, "roc_curve.png"))
 
-    if logistic_regression_results:
-        # PR
-        logreg_probs = logistic_regression_results["probs"]
-        logreg_labels = logistic_regression_results["labels"]
-
-        logreg_prec, logreg_rec, _ = precision_recall_curve(logreg_labels, logreg_probs)
-        plt.figure()
-        plt.plot(rec, prec, label="Model")
-        plt.plot(logreg_rec, logreg_prec, linestyle="--", label="LogReg")
 
 
     # --- Precision-Recall Curve ---
@@ -263,7 +254,12 @@ def evaluate_model(model, test_loader, out_dir, logistic_regression_results=None
     plt.axhline(y=baseline, linestyle="--", color="gray", label=f"Baseline (rate = {baseline:.2f})")
 
     if logistic_regression_results:
-        logreg_prec, logreg_rec, _ = precision_recall_curve(all_labels, logistic_regression_results["probs"])
+        # PR
+        logreg_probs = logistic_regression_results["probs"]
+        logreg_labels = logistic_regression_results["labels"]
+
+        logreg_prec, logreg_rec, _ = precision_recall_curve(logreg_labels, logreg_probs)
+        plt.figure()
         plt.plot(logreg_rec, logreg_prec, linestyle="--", label="LogReg")
 
     plt.title("Precision-Recall Curve")
