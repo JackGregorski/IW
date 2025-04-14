@@ -230,9 +230,18 @@ def evaluate_model(model, test_loader, out_dir, logistic_regression_results=None
 
     if logistic_regression_results:
         logreg_probs = logistic_regression_results["probs"]
-        fpr_log, tpr_log, _ = roc_curve(all_labels, logreg_probs)
-        auc_log = roc_auc_score(all_labels, logreg_probs)
+        logreg_labels = logistic_regression_results["labels"]
+
+        # ROC
+        fpr_log, tpr_log, _ = roc_curve(logreg_labels, logreg_probs)
+        auc_log = roc_auc_score(logreg_labels, logreg_probs)
         plt.plot(fpr_log, tpr_log, linestyle="--", label=f"LogReg (AUC = {auc_log:.3f})")
+
+        # PR
+        logreg_prec, logreg_rec, _ = precision_recall_curve(logreg_labels, logreg_probs)
+        plt.figure()
+        plt.plot(rec, prec, label="Model")
+        plt.plot(logreg_rec, logreg_prec, linestyle="--", label="LogReg")
 
     plt.title("ROC Curve")
     plt.xlabel("False Positive Rate")
@@ -321,7 +330,8 @@ def main():
     study = optuna.create_study(direction="maximize")
     study.optimize(lambda trial: objective(trial, input_dim, dataset), n_trials=30) # 30 trials
 
-    fig = optuna_vis.plot_param_importances(study)
+    ax = optuna_vis.plot_param_importances(study)
+    fig = ax.figure
     fig.set_size_inches(10, 6)
     fig.savefig(os.path.join(args.out_dir, "param_importance.png"))
 

@@ -21,6 +21,6 @@ INPUT_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/pairs_with_clusters.tsv
 OUTPUT_DIR="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits"
 
 # Run the Python script
-python train_test_val_split.py "$INPUT_FILE" "$OUTPUT_DIR" --test_frac 0.2 --toy_frac 0.1 --seed 42
+python train_test_val_split.py "$INPUT_FILE" "$OUTPUT_DIR" --test_frac 0.2 --toy_frac 0.01 --seed 42
 
 echo "Dataset split complete!"
