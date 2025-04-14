@@ -288,11 +288,11 @@ def plot_dummy_baseline_pr(y_true, filename):
     plt.savefig(filename)
 
 
-def final_train_and_save(dataset, input_dim, best_params, model_path):
+def final_train_and_save(dataset, input_dim, best_params, model_path,out_dir):
     model = InteractionClassifier(input_dim, best_params["hidden_sizes"], best_params["dropout"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     loader = DataLoader(dataset, batch_size=best_params["batch_size"], shuffle=True)
-    auc, train_curve, val_curve = train_eval_model(..., record_loss=True)
+    auc, train_curve, val_curve = train_eval_model(model, loader, loader, best_params["epochs"], best_params["lr"], device, record_loss=True)
     plt.figure()
     plt.plot(train_curve, label="Train Loss")
     plt.plot(val_curve, label="Val Loss")
@@ -300,7 +300,7 @@ def final_train_and_save(dataset, input_dim, best_params, model_path):
     plt.ylabel("Loss")
     plt.legend()
     plt.title("Training vs Validation Loss")
-    plt.savefig(os.path.join(args.out_dir, "loss_curve.png"))
+    plt.savefig(os.path.join(out_dir, "loss_curve.png"))
     torch.save(model.state_dict(), model_path)
     print(f"Saved final model to {model_path}")
     return model
@@ -339,7 +339,7 @@ def main():
     print("Best hyperparameters:", best_params)
 
     model_path = os.path.join(args.out_dir, "final_model.pt")
-    model = final_train_and_save(dataset, input_dim, best_params, model_path)
+    model = final_train_and_save(dataset, input_dim, best_params, model_path,args.out_dir)
 
     test_loader = DataLoader(test_dataset, batch_size=best_params["batch_size"])
 
