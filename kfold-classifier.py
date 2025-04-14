@@ -20,7 +20,6 @@ import optuna
 import os
 import json
 import argparse
-from sklearn.model_selection import GroupKFold
 
 class InteractionDataset(Dataset):
     def __init__(self, df, chem_lookup, prot_lookup):
@@ -123,6 +122,12 @@ def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_
     return roc_auc_score(all_val_labels, all_val_preds)
 
 def evaluate_model(model, test_loader, out_dir):
+    benchmark_path = os.path.join(out_dir, "benchmarks.json")
+    benchmarks = {}
+    if os.path.exists(benchmark_path):
+        with open(benchmark_path) as f:
+            benchmarks = json.load(f)
+
     model.eval()
     all_preds, all_labels = [], []
     with torch.no_grad():
@@ -151,6 +156,13 @@ def evaluate_model(model, test_loader, out_dir):
     fpr, tpr, _ = roc_curve(all_labels, all_preds)
     plt.figure()
     plt.plot(fpr, tpr, label=f"Model (AUC = {metrics['roc_auc']:.3f})")
+    for name in ["dummy", "logreg"]:
+        key = f"{name}_probs"
+        if key in benchmarks:
+            probs = np.array(benchmarks[key])
+            fpr_b, tpr_b, _ = roc_curve(all_labels, probs)
+            auc_b = roc_auc_score(all_labels, probs)
+            plt.plot(fpr_b, tpr_b, linestyle="--", label=f"{name} (AUC = {auc_b:.3f})")
     plt.title("ROC Curve")
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
@@ -176,44 +188,6 @@ def evaluate_model(model, test_loader, out_dir):
     plt.xticks([0, 1], ["Pred 0", "Pred 1"])
     plt.yticks([0, 1], ["True 0", "True 1"])
     plt.savefig(os.path.join(out_dir, "confusion_matrix.png"))
-
-def objective(trial, input_dim, dataset):
-    num_layers = trial.suggest_int("num_hidden_layers", 1, 3)
-    hidden_sizes = tuple(
-        trial.suggest_int(f"n_units_layer_{i}", 64, 512, step=64)
-        for i in range(num_layers)
-    )
-    dropout = trial.suggest_float("dropout", 0.2, 0.5)
-    lr = trial.suggest_float("lr", 1e-4, 1e-2, log=True)
-    batch_size = trial.suggest_categorical("batch_size", [32, 64])
-    epochs = trial.suggest_int("epochs", 5, 15)
-
-    # Extract labels and group ids
-    labels = dataset.data["label"].values
-    groups = dataset.data["protein_cluster"].values
-    group_kfold = GroupKFold(n_splits=5)
-    aucs = []
-
-    for train_idx, val_idx in group_kfold.split(np.zeros(len(labels)), labels, groups):
-        train_ds = Subset(dataset, train_idx)
-        val_ds = Subset(dataset, val_idx)
-
-        train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-        val_loader = DataLoader(val_ds, batch_size=batch_size)
-
-        model = InteractionClassifier(input_dim, hidden_sizes, dropout)
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        auc = train_eval_model(model, train_loader, val_loader, epochs, lr, device)
-        aucs.append(auc)
-
-    trial.set_user_attr("best_params", {
-        "hidden_sizes": hidden_sizes,
-        "dropout": dropout,
-        "lr": lr,
-        "batch_size": batch_size,
-        "epochs": epochs
-    })
-    return np.mean(aucs)
 
 def plot_dummy_baseline_pr(y_true, filename):
     positive_rate = np.mean(y_true)
