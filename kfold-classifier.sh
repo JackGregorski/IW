@@ -19,10 +19,10 @@ conda activate sn-torch-env
 echo "Starting K-Fold training on toy datasets..."
 
 # Define paths to toy dataset and embeddings
-TRAIN_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/splits/train_toy.tsv"
-TEST_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/splits/test_toy.tsv"
-CHEM_FP_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/molecular_fingerprints.tsv"
-PROT_EMB_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/encodings.tsv"
+TRAIN_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/train_toy.tsv"
+TEST_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/test_toy.tsv"
+CHEM_FP_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/molecular_fingerprints.tsv"
+PROT_EMB_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
 OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold_toy"
 
 # Run your classifier script
