@@ -15,6 +15,8 @@ from sklearn.metrics import (
 from sklearn.model_selection import GroupKFold
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
+import optuna.visualization.matplotlib as optuna_vis
+
 import matplotlib.pyplot as plt
 import optuna
 import os
@@ -80,6 +82,34 @@ def load_embedding_file(path, has_header=False, embedding_col=1):
 def filter_pairs(df, chem_lookup, prot_lookup):
     return df[df["chemical"].isin(chem_lookup.keys()) & df["protein"].isin(prot_lookup.keys())]
 
+def run_logistic_regression(train_df, test_df, chem_lookup, prot_lookup):
+    def extract_features(df):
+        feats, labels = [], []
+        for _, row in df.iterrows():
+            chem = chem_lookup.get(row['chemical'])
+            prot = prot_lookup.get(row['protein'])
+            if chem is not None and prot is not None:
+                feats.append(torch.cat([chem, prot]).numpy())
+                labels.append(row['label'])
+        return np.array(feats), np.array(labels)
+
+    X_train, y_train = extract_features(train_df)
+    X_test, y_test = extract_features(test_df)
+
+    clf = LogisticRegression(max_iter=1000)
+    clf.fit(X_train, y_train)
+    probs = clf.predict_proba(X_test)[:, 1]
+    preds = clf.predict(X_test)
+
+    return {
+        "probs": probs,
+        "accuracy": accuracy_score(y_test, preds),
+        "f1": f1_score(y_test, preds),
+        "roc_auc": roc_auc_score(y_test, probs),
+        "labels": y_test
+    }
+
+
 def objective(trial, input_dim, dataset):
     num_layers = trial.suggest_int("num_hidden_layers", 1, 3)
     hidden_sizes = tuple(
@@ -116,13 +146,14 @@ def objective(trial, input_dim, dataset):
         "epochs": epochs
     })
     return np.mean(aucs)
-def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_stopping_patience=5):
+def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_stopping_patience=5, record_loss=False):
     model.to(device)
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
     best_loss = float('inf')
     patience_counter = 0
     all_val_preds, all_val_labels = [], []
+    train_curve, val_curve = [], []
     for epoch in range(epochs):
         model.train()
         train_losses = []
@@ -145,6 +176,8 @@ def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_
                 val_losses.append(loss.item())
                 val_preds.extend(torch.sigmoid(logits).cpu().numpy())
                 val_labels.extend(y.cpu().numpy())
+        train_curve.append(np.mean(train_losses))
+        val_curve.append(avg_val_loss)
 
         avg_val_loss = np.mean(val_losses)
         if avg_val_loss < best_loss:
@@ -155,17 +188,15 @@ def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_
             patience_counter += 1
             if patience_counter >= early_stopping_patience:
                 break
-    return roc_auc_score(all_val_labels, all_val_preds)
+    if record_loss:
+        return roc_auc_score(all_val_labels, all_val_preds), train_curve, val_curve
+    else:
+        return roc_auc_score(all_val_labels, all_val_preds)
 
-def evaluate_model(model, test_loader, out_dir):
-    benchmark_path = os.path.join(out_dir, "benchmarks.json")
-    benchmarks = {}
-    if os.path.exists(benchmark_path):
-        with open(benchmark_path) as f:
-            benchmarks = json.load(f)
-
+def evaluate_model(model, test_loader, out_dir, logistic_regression_results=None):
     model.eval()
     all_preds, all_labels = [], []
+
     with torch.no_grad():
         for x, y in test_loader:
             x = x.to(next(model.parameters()).device)
@@ -176,6 +207,7 @@ def evaluate_model(model, test_loader, out_dir):
 
     binary_preds = [1 if p >= 0.5 else 0 for p in all_preds]
 
+    # Compute metrics
     metrics = {
         "accuracy": accuracy_score(all_labels, binary_preds),
         "precision": precision_score(all_labels, binary_preds),
@@ -186,36 +218,45 @@ def evaluate_model(model, test_loader, out_dir):
         "log_loss": log_loss(all_labels, all_preds)
     }
 
+    # Save metrics to JSON
     with open(os.path.join(out_dir, "results.json"), "w") as f:
         json.dump(metrics, f, indent=4)
 
+    # --- ROC Curve ---
     fpr, tpr, _ = roc_curve(all_labels, all_preds)
     plt.figure()
     plt.plot(fpr, tpr, label=f"Model (AUC = {metrics['roc_auc']:.3f})")
-    for name in ["dummy", "logreg"]:
-        key = f"{name}_probs"
-        if key in benchmarks:
-            probs = np.array(benchmarks[key])
-            fpr_b, tpr_b, _ = roc_curve(all_labels, probs)
-            auc_b = roc_auc_score(all_labels, probs)
-            plt.plot(fpr_b, tpr_b, linestyle="--", label=f"{name} (AUC = {auc_b:.3f})")
+
+    if logistic_regression_results:
+        logreg_probs = logistic_regression_results["probs"]
+        fpr_log, tpr_log, _ = roc_curve(all_labels, logreg_probs)
+        auc_log = roc_auc_score(all_labels, logreg_probs)
+        plt.plot(fpr_log, tpr_log, linestyle="--", label=f"LogReg (AUC = {auc_log:.3f})")
+
     plt.title("ROC Curve")
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.legend()
     plt.savefig(os.path.join(out_dir, "roc_curve.png"))
 
+    # --- Precision-Recall Curve ---
     prec, rec, _ = precision_recall_curve(all_labels, all_preds)
     plt.figure()
     plt.plot(rec, prec, label="Model")
     baseline = np.mean(all_labels)
     plt.axhline(y=baseline, linestyle="--", color="gray", label=f"Baseline (rate = {baseline:.2f})")
+
+    if logistic_regression_results:
+        logreg_prec, logreg_rec, _ = precision_recall_curve(all_labels, logistic_regression_results["probs"])
+        plt.plot(logreg_rec, logreg_prec, linestyle="--", label="LogReg")
+
     plt.title("Precision-Recall Curve")
     plt.xlabel("Recall")
     plt.ylabel("Precision")
     plt.legend()
     plt.savefig(os.path.join(out_dir, "precision_recall.png"))
 
+    # --- Confusion Matrix ---
     cm = confusion_matrix(all_labels, binary_preds)
     plt.figure()
     plt.imshow(cm, cmap='Blues')
@@ -224,6 +265,7 @@ def evaluate_model(model, test_loader, out_dir):
     plt.xticks([0, 1], ["Pred 0", "Pred 1"])
     plt.yticks([0, 1], ["True 0", "True 1"])
     plt.savefig(os.path.join(out_dir, "confusion_matrix.png"))
+
 
 def plot_dummy_baseline_pr(y_true, filename):
     positive_rate = np.mean(y_true)
@@ -240,7 +282,15 @@ def final_train_and_save(dataset, input_dim, best_params, model_path):
     model = InteractionClassifier(input_dim, best_params["hidden_sizes"], best_params["dropout"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     loader = DataLoader(dataset, batch_size=best_params["batch_size"], shuffle=True)
-    train_eval_model(model, loader, loader, best_params["epochs"], best_params["lr"], device)
+    auc, train_curve, val_curve = train_eval_model(..., record_loss=True)
+    plt.figure()
+    plt.plot(train_curve, label="Train Loss")
+    plt.plot(val_curve, label="Val Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.title("Training vs Validation Loss")
+    plt.savefig(os.path.join(args.out_dir, "loss_curve.png"))
     torch.save(model.state_dict(), model_path)
     print(f"Saved final model to {model_path}")
     return model
@@ -268,7 +318,12 @@ def main():
     test_dataset = InteractionDataset(test_df, chem_lookup, prot_lookup)
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(lambda trial: objective(trial, input_dim, dataset), n_trials=30)
+    study.optimize(lambda trial: objective(trial, input_dim, dataset), n_trials=30) # 30 trials
+
+    fig = optuna_vis.plot_param_importances(study)
+    fig.set_size_inches(10, 6)
+    fig.savefig(os.path.join(args.out_dir, "param_importance.png"))
+
     best_params = study.best_trial.user_attrs["best_params"]
     print("Best hyperparameters:", best_params)
 
@@ -276,7 +331,11 @@ def main():
     model = final_train_and_save(dataset, input_dim, best_params, model_path)
 
     test_loader = DataLoader(test_dataset, batch_size=best_params["batch_size"])
-    evaluate_model(model, test_loader, args.out_dir)
+
+    logistic_regression_results = run_logistic_regression(
+    train_df, test_df, chem_lookup, prot_lookup)
+
+    evaluate_model(model, test_loader, args.out_dir, logistic_regression_results)
 
     y_true = train_df['label'].values
     plot_dummy_baseline_pr(y_true, os.path.join(args.out_dir, "dummy_pr_baseline.png"))
