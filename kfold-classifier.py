@@ -12,7 +12,7 @@ from sklearn.metrics import (
     confusion_matrix, precision_recall_curve,
     brier_score_loss, log_loss
 )
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GroupKFold
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
 import matplotlib.pyplot as plt
@@ -80,6 +80,42 @@ def load_embedding_file(path, has_header=False, embedding_col=1):
 def filter_pairs(df, chem_lookup, prot_lookup):
     return df[df["chemical"].isin(chem_lookup.keys()) & df["protein"].isin(prot_lookup.keys())]
 
+def objective(trial, input_dim, dataset):
+    num_layers = trial.suggest_int("num_hidden_layers", 1, 3)
+    hidden_sizes = tuple(
+        trial.suggest_int(f"n_units_layer_{i}", 64, 512, step=64)
+        for i in range(num_layers)
+    )
+    dropout = trial.suggest_float("dropout", 0.2, 0.5)
+    lr = trial.suggest_float("lr", 1e-4, 1e-2, log=True)
+    batch_size = trial.suggest_categorical("batch_size", [32, 64])
+    epochs = trial.suggest_int("epochs", 5, 15)
+
+    # Group-aware k-fold: group by protein_cluster
+    labels = dataset.data["label"].values
+    groups = dataset.data["protein_cluster"].values
+    kfold = GroupKFold(n_splits=5)
+    aucs = []
+
+    for train_idx, val_idx in kfold.split(np.zeros(len(labels)), labels, groups):
+        train_subset = Subset(dataset, train_idx)
+        val_subset = Subset(dataset, val_idx)
+        train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
+        val_loader = DataLoader(val_subset, batch_size=batch_size)
+
+        model = InteractionClassifier(input_dim, hidden_sizes, dropout)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        auc = train_eval_model(model, train_loader, val_loader, epochs, lr, device)
+        aucs.append(auc)
+
+    trial.set_user_attr("best_params", {
+        "hidden_sizes": hidden_sizes,
+        "dropout": dropout,
+        "lr": lr,
+        "batch_size": batch_size,
+        "epochs": epochs
+    })
+    return np.mean(aucs)
 def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_stopping_patience=5):
     model.to(device)
     criterion = nn.BCEWithLogitsLoss()
