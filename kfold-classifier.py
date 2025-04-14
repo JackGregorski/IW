@@ -259,7 +259,7 @@ def evaluate_model(model, test_loader, out_dir, logistic_regression_results=None
         logreg_labels = logistic_regression_results["labels"]
 
         logreg_prec, logreg_rec, _ = precision_recall_curve(logreg_labels, logreg_probs)
-        plt.figure()
+
         plt.plot(logreg_rec, logreg_prec, linestyle="--", label="LogReg")
 
     plt.title("Precision-Recall Curve")
