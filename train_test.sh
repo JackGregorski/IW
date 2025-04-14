@@ -17,7 +17,7 @@ conda activate sn-torch-env
 echo "Starting cluster-based dataset split..."
 
 # Input TSV and output directory
-INPUT_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/positives.tsv"
+INPUT_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/pos_plus_neg.tsv"
 OUTPUT_DIR="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits"
 
 # Run the Python script
