@@ -117,7 +117,7 @@ def objective(trial, input_dim, dataset):
         for i in range(num_layers)
     )
     dropout = trial.suggest_float("dropout", 0.2, 0.5)
-    lr = trial.suggest_float("lr", 1e-4, 1e-2, log=True)
+    lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)
     batch_size = trial.suggest_categorical("batch_size", [32, 64])
     epochs = trial.suggest_int("epochs", 5, 15)
 
