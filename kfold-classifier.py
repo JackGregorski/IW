@@ -177,9 +177,10 @@ def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_
                 val_preds.extend(torch.sigmoid(logits).cpu().numpy())
                 val_labels.extend(y.cpu().numpy())
         train_curve.append(np.mean(train_losses))
+        avg_val_loss = np.mean(val_losses)
         val_curve.append(avg_val_loss)
 
-        avg_val_loss = np.mean(val_losses)
+
         if avg_val_loss < best_loss:
             best_loss = avg_val_loss
             all_val_preds, all_val_labels = val_preds, val_labels
