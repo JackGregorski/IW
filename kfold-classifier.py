@@ -237,17 +237,23 @@ def evaluate_model(model, test_loader, out_dir, logistic_regression_results=None
         auc_log = roc_auc_score(logreg_labels, logreg_probs)
         plt.plot(fpr_log, tpr_log, linestyle="--", label=f"LogReg (AUC = {auc_log:.3f})")
 
-        # PR
-        logreg_prec, logreg_rec, _ = precision_recall_curve(logreg_labels, logreg_probs)
-        plt.figure()
-        plt.plot(rec, prec, label="Model")
-        plt.plot(logreg_rec, logreg_prec, linestyle="--", label="LogReg")
 
     plt.title("ROC Curve")
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.legend()
     plt.savefig(os.path.join(out_dir, "roc_curve.png"))
+
+    if logistic_regression_results:
+        # PR
+        logreg_probs = logistic_regression_results["probs"]
+        logreg_labels = logistic_regression_results["labels"]
+
+        logreg_prec, logreg_rec, _ = precision_recall_curve(logreg_labels, logreg_probs)
+        plt.figure()
+        plt.plot(rec, prec, label="Model")
+        plt.plot(logreg_rec, logreg_prec, linestyle="--", label="LogReg")
+
 
     # --- Precision-Recall Curve ---
     prec, rec, _ = precision_recall_curve(all_labels, all_preds)
