@@ -3,7 +3,7 @@
 #SBATCH --job-name=KFold_ToyClassifier
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
-#SBATCH --time=01:30:00
+#SBATCH --time=08:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
@@ -19,11 +19,11 @@ conda activate sn-torch-env
 echo "Starting K-Fold training on toy datasets..."
 
 # Define paths to toy dataset and embeddings
-TRAIN_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/train_toy.tsv"
-TEST_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/test_toy.tsv"
+TRAIN_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/train.tsv"
+TEST_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/test.tsv"
 CHEM_FP_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/molecular_fingerprints.tsv"
 PROT_EMB_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
-OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold_toy"
+OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold"
 
 # Run your classifier script
 python kfold-classifier.py \
