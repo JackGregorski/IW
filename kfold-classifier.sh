@@ -6,25 +6,27 @@
 #SBATCH --time=08:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:1
+#SBATCH --gpus=1                      # ✅ Recommended over --gres=gpu:1 for SLURM v22+
+#SBATCH --constraint=rh9             # ✅ Ensures job only runs on Rocky Linux 9 nodes
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
 
+# Load modules appropriate for rh9 (check module availability with `module avail`)
 module purge
-module load anaconda3/2023.9
+module load anaconda3/2023.9         # ✅ Works for rh9 unless changed by cluster admins
 conda activate sn-torch-env
 
 echo "Starting K-Fold training on toy datasets..."
 
-# Define paths to toy dataset and embeddings
+# Paths to input data
 TRAIN_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/train_toy.tsv"
 TEST_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/test_toy.tsv"
 CHEM_FP_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/molecular_fingerprints.tsv"
 PROT_EMB_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
 OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold_toy"
 
-# Run your classifier script
+# Run training
 python kfold-classifier.py \
     --train "${TRAIN_FILE}" \
     --test "${TEST_FILE}" \
