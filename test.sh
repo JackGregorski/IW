@@ -5,8 +5,8 @@
 #SBATCH --time=00:10:00
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
-#SBATCH --gpus=1
-#SBATCH --constraint=rh9
+#SBATCH --gres=gpu:1
+
 
 module purge
 module load anaconda3/2023.9
