@@ -12,7 +12,7 @@
 
 module purge
 module load anaconda3/2023.9
-conda activate sn-torch-env
+conda activate jg-torch-env
 
 echo "Starting protein clustering..."
 
