@@ -18,9 +18,9 @@ echo "Starting protein clustering..."
 
 # Define input/output file paths
 ENCODING_FILE="/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/encodings.tsv"
-PAIR_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/positives.tsv"
-OUTPUT_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/pairs_with_clusters.tsv"
-NUM_CLUSTERS=1000
+PAIR_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/positives_800.tsv"
+OUTPUT_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/pairs_with_clusters_visual.tsv"
+NUM_CLUSTERS=10
 
 # Run the clustering script
 python cluster_kmeans.py "$ENCODING_FILE" "$PAIR_FILE" "$OUTPUT_FILE" --num_clusters "$NUM_CLUSTERS"
