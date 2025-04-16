@@ -7,7 +7,6 @@
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
 #SBATCH --gpus=1                      # ✅ Recommended over --gres=gpu:1 for SLURM v22+
-#SBATCH --constraint=rh9             # ✅ Ensures job only runs on Rocky Linux 9 nodes
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
