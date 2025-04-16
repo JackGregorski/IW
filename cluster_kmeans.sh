@@ -17,9 +17,9 @@ conda activate jg-torch-env
 echo "Starting protein clustering..."
 
 # Define input/output file paths
-ENCODING_FILE="/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/encodings.tsv"
-PAIR_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/positives_800.tsv"
-OUTPUT_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/pairs_with_clusters_visual.tsv"
+ENCODING_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
+PAIR_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/positives_800.tsv"
+OUTPUT_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/pairs_with_clusters_visual.tsv"
 NUM_CLUSTERS=10
 
 # Run the clustering script
