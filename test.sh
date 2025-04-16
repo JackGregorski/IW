@@ -10,6 +10,6 @@
 
 module purge
 module load anaconda3/2023.9
-conda activate sn-torch-env
+conda activate jg-torch-env
 
 python -c "import torch; print('✅ Torch version:', torch.__version__)"
