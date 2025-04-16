@@ -18,7 +18,7 @@ echo "Starting cluster visualization..."
 
 # Set variables
 ENCODING_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
-CLUSTER_FILE="/scratch/gpfs/jg9705/IW_data/Model_Resources/pairs_with_clusters_visual.tsv"
+CLUSTER_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/pairs_with_clusters_visual.tsv"
 METHOD="pca"  # or tsne or umap
 SAVE_PATH="/scratch/gpfs/jg9705/IW_data/kmeans_clusters_${METHOD}.png"
 
