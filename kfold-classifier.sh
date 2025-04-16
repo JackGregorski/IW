@@ -3,10 +3,10 @@
 #SBATCH --job-name=KFold_ToyClassifier
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
-#SBATCH --time=08:00:00
+#SBATCH --time=01:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
-#SBATCH --gpus=1                      # ✅ Recommended over --gres=gpu:1 for SLURM v22+
+#SBATCH --gres=gpu:1                      # ✅ Recommended over --gres=gpu:1 for SLURM v22+
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
@@ -14,7 +14,7 @@
 # Load modules appropriate for rh9 (check module availability with `module avail`)
 module purge
 module load anaconda3/2023.9         # ✅ Works for rh9 unless changed by cluster admins
-conda activate sn-torch-env
+conda activate jg-torch-env
 
 echo "Starting K-Fold training on toy datasets..."
 
