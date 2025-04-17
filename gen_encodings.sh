@@ -12,7 +12,7 @@
 
 module purge
 module load anaconda3/2024.2
-conda activate jn-torch-env
+conda activate jg-torch-env
 
 # Define the input FASTA file (contains all ~170K proteins)
 INPUT_FASTA="/scratch/gpfs/jg9705/IW_data/gen_ideal_protein_chem_scores/9606.protein.sequences.v12.0.fa"
