@@ -18,7 +18,7 @@ echo "Starting filtering and negative generation..."
 
 # Set input file and output base path (no extension)
 INPUT_FILE="/scratch/gpfs/jg9705/IW_data/gen_ideal_protein_chem_scores/9606.protein_chemical.links.v5.0.tsv"
-OUTPUT_BASE="/scratch/gpfs/jg9705/IW_data/Model_Resources/pairs"
+OUTPUT_BASE="/scratch/gpfs/jg9705/IW_code/Model_Resources/pairs"
 THRESHOLDS="400,500,600,700,800,900"
 
 # Run the updated script
