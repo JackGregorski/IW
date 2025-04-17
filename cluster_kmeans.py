@@ -2,54 +2,46 @@ import pandas as pd
 import argparse
 from sklearn.cluster import KMeans
 
-def cluster_proteins(encoding_file, pair_file, output_file, num_clusters=10):
-    # Load protein encodings without headers and assign custom column names
-    encodings_df = pd.read_csv(encoding_file, sep='\t', header=None, dtype={2: str})
+def cluster_unique_proteins(encoding_file, protein_list_file, output_file, num_clusters=10):
+    # Load all protein encodings
+    encodings_df = pd.read_csv(encoding_file, sep='\t', header=None)
     encodings_df.columns = ['protein', 'sequence', 'encoding']
-
-    # Drop rows with missing encodings
     encodings_df = encodings_df.dropna(subset=['encoding'])
 
-    # Safely parse the space-separated encoding string into floats
-    encoding_vectors = encodings_df['encoding'].apply(
-        lambda x: list(map(float, x.strip().split())) if isinstance(x, str) else []
-    )
-    encoding_df = pd.DataFrame(encoding_vectors.tolist())
-    valid_rows = encoding_df.dropna()
+    # Load unique protein IDs to cluster
+    unique_prots_df = pd.read_csv(protein_list_file, sep='\t', header=None)
+    unique_prots_df.columns = ['protein']
+    unique_proteins = set(unique_prots_df['protein'])
 
-    # Align protein IDs with valid encoding rows
-    protein_ids = encodings_df.iloc[valid_rows.index]['protein'].reset_index(drop=True)
-    encoding_df = valid_rows.reset_index(drop=True)
+    # Filter encodings to just the unique proteins
+    filtered_df = encodings_df[encodings_df['protein'].isin(unique_proteins)].copy()
 
-    # Cluster using KMeans
+    # Convert encodings to numeric arrays
+    encoding_vectors = filtered_df['encoding'].apply(lambda x: list(map(float, x.strip().split())))
+    encoding_matrix = pd.DataFrame(encoding_vectors.tolist())
+    valid_rows = encoding_matrix.dropna()
+
+    filtered_proteins = filtered_df.iloc[valid_rows.index]['protein'].reset_index(drop=True)
+    encoding_matrix = valid_rows.reset_index(drop=True)
+
+    # Cluster encodings
     kmeans = KMeans(n_clusters=num_clusters, random_state=42)
-    cluster_labels = kmeans.fit_predict(encoding_df)
+    cluster_labels = kmeans.fit_predict(encoding_matrix)
 
-    # Create DataFrame mapping proteins to their clusters
-    protein_to_cluster = pd.DataFrame({
-        'protein': protein_ids,
+    # Save mapping
+    cluster_map = pd.DataFrame({
+        'protein': filtered_proteins,
         'protein_cluster': cluster_labels
     })
-
-    # Load the positive/negative interaction data
-    pairs_df = pd.read_csv(pair_file, sep='\t')
-
-    # Merge cluster label into the interaction data
-    merged_df = pairs_df.merge(protein_to_cluster, on='protein', how='left')
-
-    # Drop any rows that don't have a protein cluster (no encoding available)
-    merged_df = merged_df.dropna(subset=['protein_cluster'])
-
-    # Save final output
-    merged_df.to_csv(output_file, sep='\t', index=False)
-    print(f"Clustered and merged data saved to {output_file}")
+    cluster_map.to_csv(output_file, sep='\t', index=False)
+    print(f"Saved protein-cluster lookup table to {output_file}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Cluster proteins and label pair data with protein cluster.")
-    parser.add_argument("encoding_file", help="Path to the file with protein encodings (no headers, 3 columns)")
-    parser.add_argument("pair_file", help="Path to the file with positive and negative pairs")
-    parser.add_argument("output_file", help="Path to save the pair data with cluster labels")
-    parser.add_argument("--num_clusters", type=int, default=10, help="Number of clusters for KMeans (default: 10)")
+    parser = argparse.ArgumentParser(description="Cluster unique proteins and save mapping.")
+    parser.add_argument("encoding_file", help="Protein encoding file (3-column TSV)")
+    parser.add_argument("protein_list_file", help="List of unique proteins to cluster (1-column TSV)")
+    parser.add_argument("output_file", help="Path to save protein-cluster lookup TSV")
+    parser.add_argument("--num_clusters", type=int, default=10, help="Number of clusters (default: 10)")
 
     args = parser.parse_args()
-    cluster_proteins(args.encoding_file, args.pair_file, args.output_file, args.num_clusters)
+    cluster_unique_proteins(args.encoding_file, args.protein_list_file, args.output_file, args.num_clusters)

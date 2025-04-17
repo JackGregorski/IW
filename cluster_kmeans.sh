@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=Cluster_Proteins
+#SBATCH --job-name=Cluster_UniqueProteins
 #SBATCH --output=/scratch/gpfs/jg9705/IW_data/logs/cluster_proteins.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_data/logs/cluster_proteins.err
 #SBATCH --time=01:00:00
@@ -16,13 +16,11 @@ conda activate jg-torch-env
 
 echo "Starting protein clustering..."
 
-# Define input/output file paths
 ENCODING_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
-PAIR_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/positives_800.tsv"
-OUTPUT_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/pairs_with_clusters_visual.tsv"
-NUM_CLUSTERS=10
+UNIQUE_PROTEINS_FILE="/scratch/gpfs/jg9705/IW_data/gen_ideal_protein_chem_scores/unique_proteins.tsv"
+OUTPUT_LOOKUP="/scratch/gpfs/jg9705/IW_code/Model_Resources/protein_cluster_lookup.tsv"
+NUM_CLUSTERS=1000
 
-# Run the clustering script
-python cluster_kmeans.py "$ENCODING_FILE" "$PAIR_FILE" "$OUTPUT_FILE" --num_clusters "$NUM_CLUSTERS"
+python cluster_kmeans.py "$ENCODING_FILE" "$UNIQUE_PROTEINS_FILE" "$OUTPUT_LOOKUP" --num_clusters "$NUM_CLUSTERS"
 
 echo "Protein clustering completed!"
