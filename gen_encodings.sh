@@ -11,19 +11,24 @@
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
 
 module purge
-module load anaconda3/2023.9
-conda activate sn-torch-env
+module load anaconda3/2024.2
+conda activate jn-torch-env
 
-# Define the input FASTA file path
+# Define the input FASTA file (contains all ~170K proteins)
 INPUT_FASTA="/scratch/gpfs/jg9705/IW_data/gen_ideal_protein_chem_scores/9606.protein.sequences.v12.0.fa"
 
-# Define the model file path
+# File containing the list of 19,196 proteins to encode
+UNIQUE_PROTEINS="/scratch/gpfs/jg9705/IW_data/gen_ideal_protein_chem_scores/unique_proteins.tsv"
+
+# Path to the locally downloaded ESM model
 MODEL_FILE="/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/esm1v_t33_650M_UR90S_1.pt"
 
-# Define the output file
-OUTPUT_FILE="/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/encodings/encodings.tsv"
+# Output location for protein encodings
+OUTPUT_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
 
-echo "Processing FASTA file: ${INPUT_FASTA}"
-python gen_encodings.py "${INPUT_FASTA}" "${OUTPUT_FILE}" "${MODEL_FILE}"
+echo "Starting protein encoding with model: ${MODEL_FILE}"
+echo "Processing only proteins listed in: ${UNIQUE_PROTEINS}"
 
-echo "Job completed successfully!"
+python gen_encodings.py "${INPUT_FASTA}" "${UNIQUE_PROTEINS}" "${OUTPUT_FILE}" "${MODEL_FILE}"
+
+echo "✅ Job completed successfully!"
