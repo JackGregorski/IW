@@ -4,14 +4,14 @@
 #SBATCH --output=/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/logs/%x.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_data/gen_protein_encodings/logs/%x.err
 #SBATCH --time=01:00:00
-#SBATCH --mem=10G
+#SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --mail-type=begin,end
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
 
 module purge
-module load anaconda3/2024.2
+module load anaconda3/2023.9
 conda activate jg-torch-env
 
 # Define the input FASTA file (contains all ~170K proteins)
