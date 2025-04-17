@@ -5,7 +5,7 @@ from sklearn.cluster import KMeans
 def cluster_unique_proteins(encoding_file, protein_list_file, output_file, num_clusters=10):
     # Load all protein encodings
     encodings_df = pd.read_csv(encoding_file, sep='\t', header=None)
-    encodings_df.columns = ['protein', 'sequence', 'encoding']
+    encodings_df.columns = ['protein', 'encoding']
     encodings_df = encodings_df.dropna(subset=['encoding'])
 
     # Load unique protein IDs to cluster
