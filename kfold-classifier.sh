@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=KFold_ToyClassifier
+#SBATCH --job-name=KFold_Classifier
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
-#SBATCH --time=01:00:00
+#SBATCH --time=08:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1                      # ✅ Recommended over --gres=gpu:1 for SLURM v22+
@@ -19,11 +19,11 @@ conda activate jg-torch-env
 echo "Starting K-Fold training on toy datasets..."
 
 # Paths to input data
-TRAIN_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/train_toy.tsv"
-TEST_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/test_toy.tsv"
+TRAIN_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/train.tsv"
+TEST_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/test.tsv"
 CHEM_FP_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/molecular_fingerprints.tsv"
 PROT_EMB_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
-OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold_toy"
+OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold"
 
 # Run training
 python kfold-classifier.py \
