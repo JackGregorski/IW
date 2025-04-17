@@ -17,8 +17,8 @@ conda activate sn-torch-env
 echo "Starting merge for all thresholded datasets..."
 
 LOOKUP_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/protein_cluster_lookup.tsv"
-INPUT_DIR="/scratch/gpfs/jg9705/IW_data/Model_Resources"
-OUTPUT_DIR="/scratch/gpfs/jg9705/IW_data/Model_Resources/with_clusters"
+INPUT_DIR="/scratch/gpfs/jg9705/IW_code/Model_Resources"
+OUTPUT_DIR="/scratch/gpfs/jg9705/IW_code/Model_Resources/with_clusters"
 
 mkdir -p "$OUTPUT_DIR"
 
