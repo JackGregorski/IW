@@ -27,7 +27,7 @@ for threshold in 400 500 600 700 800 900; do
     OUTPUT_FILE="${OUTPUT_DIR}/pairs_threshold${threshold}_clustered.tsv"
 
     echo "→ Processing $INPUT_FILE"
-    python merge_protein_clusters.py "$INPUT_FILE" "$LOOKUP_FILE" "$OUTPUT_FILE"
+    python add_clusters.py "$INPUT_FILE" "$LOOKUP_FILE" "$OUTPUT_FILE"
 done
 
 echo "✅ All thresholded datasets processed and saved to $OUTPUT_DIR"
