@@ -3,7 +3,7 @@
 #SBATCH --job-name=Filter_PosNeg
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/filter_pos_neg_%j.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/filter_pos_neg_%j.err
-#SBATCH --time=02:00:00
+#SBATCH --time=03:00:00
 #SBATCH --mem=2G
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-type=begin,end,fail
