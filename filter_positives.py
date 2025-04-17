@@ -26,7 +26,7 @@ def filter_and_generate_negatives(input_file, base_output_file, threshold):
         num_negatives = min(100, max(num_positives, 20))
 
         possible_negatives = list(all_chemicals - pos_chems)
-        sampled = random.sample(possible_negatives, min(num_negatives, len(possible_negatives)))
+        sampled = random.sample(possible_negatives, min(num_positives, len(possible_negatives)))
 
         for chem in sampled:
             negative_rows.append({
