@@ -191,7 +191,7 @@ def main():
 
     train_df = pd.read_csv(args.train, sep="\t")
     chem_lookup = load_embedding_file(args.chem_fp)
-    prot_lookup = load_embedding_file(args.prot_emb, embedding_col=2)
+    prot_lookup = load_embedding_file(args.prot_emb, embedding_col=1)
 
     train_df = filter_pairs(train_df, chem_lookup, prot_lookup)
 
