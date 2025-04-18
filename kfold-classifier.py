@@ -156,10 +156,7 @@ def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_
             patience_counter += 1
             if patience_counter >= early_stopping_patience:
                 break
-    if record_loss:
-        return roc_auc_score(all_val_labels, all_val_preds), train_curve, val_curve
-    else:
-        return roc_auc_score(all_val_labels, all_val_preds)
+
 
 
 def final_train_and_save(dataset, input_dim, best_params, model_path,out_dir):
