@@ -8,6 +8,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, Subset
 
 from sklearn.model_selection import GroupKFold
+from sklearn.metrics import roc_auc_score
 import optuna.visualization.matplotlib as optuna_vis
 
 import matplotlib.pyplot as plt
@@ -156,6 +157,17 @@ def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_
             patience_counter += 1
             if patience_counter >= early_stopping_patience:
                 break
+        if not record_loss:
+            try:
+                return roc_auc_score(all_val_labels, all_val_preds)
+            except ValueError:
+                return 0.0  # Or np.nan if you prefer to skip in averaging
+        else:
+            try:
+                auc = roc_auc_score(all_val_labels, all_val_preds)
+            except ValueError:
+                auc = 0.0
+            return auc, train_curve, val_curve
 
 
 
