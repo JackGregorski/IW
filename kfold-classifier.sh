@@ -19,8 +19,8 @@ conda activate jg-torch-env
 echo "Starting K-Fold training on toy datasets..."
 
 # Paths to input data
-TRAIN_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/train.tsv"
-TEST_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/test.tsv"
+TRAIN_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/threshold400/train.tsv"
+TEST_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/threshold400/test.tsv"
 CHEM_FP_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/molecular_fingerprints.tsv"
 PROT_EMB_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
 OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold"

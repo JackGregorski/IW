@@ -208,7 +208,7 @@ def main():
     best_params = study.best_trial.user_attrs["best_params"]
     print("Best hyperparameters:", best_params)
 
-    model_path = os.path.join(args.out_dir, "final_model.pt")
+    model_path = os.path.join(args.out_dir, "final_model_400.pt")
     model = final_train_and_save(full_dataset, input_dim, best_params, model_path, args.out_dir)
 
 if __name__ == "__main__":
