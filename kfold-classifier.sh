@@ -1,34 +1,32 @@
 #!/bin/bash
-
 #SBATCH --job-name=KFold_Classifier
-#SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
-#SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
-#SBATCH --time=01:00:00
-#SBATCH --mem=16G
+#SBATCH --output=/scratch/gpfs/jg9705/IW_logs/KFold_%A_%a.out
+#SBATCH --error=/scratch/gpfs/jg9705/IW_logs/KFold_%A_%a.err
+#SBATCH --array=400,500,600,700,800,900      # Run one job per threshold
+#SBATCH --time=02:00:00                       # Increase time per job
+#SBATCH --mem=32G                             # Increase memory if needed
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:1                      # ✅ Recommended over --gres=gpu:1 for SLURM v22+
+#SBATCH --gres=gpu:1
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code
 
-# Load modules appropriate for rh9 (check module availability with `module avail`)
 module purge
-module load anaconda3/2023.9         # ✅ Works for rh9 unless changed by cluster admins
+module load anaconda3/2023.9
 conda activate jg-torch-env
 
-echo "Starting K-Fold training on toy datasets..."
-
-# Paths to input data
-TRAIN_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/threshold400/train.tsv"
+THRESHOLD=${SLURM_ARRAY_TASK_ID}
+TRAIN_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/threshold${THRESHOLD}/train.tsv"
 CHEM_FP_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/molecular_fingerprints.tsv"
 PROT_EMB_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
-OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold"
+OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold/threshold${THRESHOLD}"
 
-# Run training
+echo "Running threshold $THRESHOLD"
+
 python kfold-classifier.py \
     --train "${TRAIN_FILE}" \
     --chem_fp "${CHEM_FP_FILE}" \
     --prot_emb "${PROT_EMB_FILE}" \
     --out_dir "${OUT_DIR}"
 
-echo "✅ K-Fold toy classifier run complete."
+echo "✅ Done with threshold $THRESHOLD"

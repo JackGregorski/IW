@@ -79,15 +79,15 @@ def filter_pairs(df, chem_lookup, prot_lookup):
 
 
 def objective(trial, input_dim, dataset):
-    num_layers = trial.suggest_int("num_hidden_layers", 1, 3)
+    num_layers = trial.suggest_int("num_hidden_layers", 1, 4)
     hidden_sizes = tuple(
-        trial.suggest_int(f"n_units_layer_{i}", 64, 512, step=64)
-        for i in range(num_layers)
-    )
+    trial.suggest_int(f"n_units_layer_{i}", 128, 1024, step=128)
+    for i in range(num_layers)
+)
     dropout = trial.suggest_float("dropout", 0.2, 0.5)
     lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)
     batch_size = trial.suggest_categorical("batch_size", [32, 64, 128])
-    epochs = trial.suggest_int("epochs", 3, 5)
+    epochs = trial.suggest_int("epochs", 5, 15)
 
     labels = dataset.data["label"].values
     groups = dataset.data["protein_cluster"].values
@@ -114,7 +114,7 @@ def objective(trial, input_dim, dataset):
     })
     return np.mean(aucs)
 
-def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_stopping_patience=5, record_loss=False):
+def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_stopping_patience=7, record_loss=False):
     model.to(device)
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -183,7 +183,7 @@ def final_train_and_save(dataset, input_dim, best_params, model_path,out_dir):
     plt.ylabel("Loss")
     plt.legend()
     plt.title("Training vs Validation Loss")
-    plt.savefig(os.path.join(out_dir, "loss_curve.png"))
+    plt.savefig(os.path.join(out_dir, "loss_curve_500.png"))
     torch.save(model.state_dict(), model_path)
     print(f"Saved final model to {model_path}")
     return model
@@ -212,12 +212,12 @@ def main():
     full_dataset = InteractionDataset(train_df, chem_lookup, prot_lookup)
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(lambda trial: objective(trial, input_dim, dataset_tune), n_trials=10)
+    study.optimize(lambda trial: objective(trial, input_dim, dataset_tune), n_trials=20)
 
     best_params = study.best_trial.user_attrs["best_params"]
     print("Best hyperparameters:", best_params)
 
-    model_path = os.path.join(args.out_dir, "final_model_400.pt")
+    model_path = os.path.join(args.out_dir, "final_model_500.pt")
     model = final_train_and_save(full_dataset, input_dim, best_params, model_path, args.out_dir)
 
 if __name__ == "__main__":
