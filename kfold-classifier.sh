@@ -27,7 +27,6 @@ OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold"
 # Run training
 python kfold-classifier.py \
     --train "${TRAIN_FILE}" \
-    --test "${TEST_FILE}" \
     --chem_fp "${CHEM_FP_FILE}" \
     --prot_emb "${PROT_EMB_FILE}" \
     --out_dir "${OUT_DIR}"
