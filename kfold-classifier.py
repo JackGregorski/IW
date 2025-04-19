@@ -170,17 +170,17 @@ def train_eval_model(model, train_loader, val_loader, epochs, lr,weight_decay, d
             patience_counter += 1
             if patience_counter >= early_stopping_patience:
                 break
-        if not record_loss:
-            try:
-                return roc_auc_score(all_val_labels, all_val_preds)
-            except ValueError:
-                return 0.0  # Or np.nan if you prefer to skip in averaging
-        else:
-            try:
-                auc = roc_auc_score(all_val_labels, all_val_preds)
-            except ValueError:
-                auc = 0.0
-            return auc, train_curve, val_curve
+    if record_loss:
+        try:
+            auc = roc_auc_score(all_val_labels, all_val_preds)
+        except ValueError:
+            auc = 0.0
+        return auc, train_curve, val_curve
+    else:
+        try:
+            return roc_auc_score(all_val_labels, all_val_preds)
+        except ValueError:
+            return 0.0
 
 
 
@@ -191,6 +191,9 @@ def final_train_and_save(dataset, input_dim, best_params, model_path,out_dir,thr
     loader = DataLoader(dataset, batch_size=best_params["batch_size"], shuffle=True,num_workers=4, pin_memory=True, drop_last=True)
     auc, train_curve, val_curve = train_eval_model(model, loader, loader, best_params["epochs"], best_params["lr"],best_params['weight_decay'], device, record_loss=True)
     plt.figure()
+    epochs_range = list(range(1, len(train_curve) + 1))
+    plt.plot(epochs_range, train_curve, label="Train Loss")
+    plt.plot(epochs_range, val_curve, label="Val Loss")
     plt.plot(train_curve, label="Train Loss")
     plt.plot(val_curve, label="Val Loss")
     plt.xlabel("Epoch")
@@ -212,7 +215,8 @@ def main():
 
     os.makedirs(args.out_dir, exist_ok=True)
 
-    threshold = os.path.basename(args.train).split("threshold")[-1].split("/")[0]
+    threshold = os.path.basename(args.train).split("threshold")[-1].split(".")[0]
+
 
     train_df = pd.read_csv(args.train, sep="\t")
     chem_lookup = load_embedding_file(args.chem_fp)
