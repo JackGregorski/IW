@@ -37,21 +37,30 @@ class InteractionDataset(Dataset):
         return x, y
 
 class InteractionClassifier(nn.Module):
-    def __init__(self, input_dim, hidden_sizes, dropout):
+    def __init__(self, input_dim, hidden_sizes, dropout, activation_name="relu"):
         super().__init__()
         layers = []
+
+        if activation_name == "relu":
+            activation = nn.ReLU()
+        elif activation_name == "leaky_relu":
+            activation = nn.LeakyReLU(0.01)
+        elif activation_name == "gelu":
+            activation = nn.GELU()
+        else:
+            raise ValueError(f"Unknown activation: {activation_name}")
         for i, hidden in enumerate(hidden_sizes):
             in_dim = input_dim if i == 0 else hidden_sizes[i-1]
             layers.extend([
                 nn.Linear(in_dim, hidden),
-                nn.ReLU(),
+                activation,
                 nn.Dropout(dropout)
             ])
         layers.append(nn.Linear(hidden_sizes[-1], 1))
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):
-        return self.model(x).squeeze()
+        return self.model(x).squeeze(-1)
 
 def load_embedding_file(path, has_header=False, embedding_col=1):
     lookup = {}
@@ -79,16 +88,17 @@ def filter_pairs(df, chem_lookup, prot_lookup):
 
 
 def objective(trial, input_dim, dataset):
-    num_layers = trial.suggest_int("num_hidden_layers", 1, 4)
+    num_layers = trial.suggest_int("num_hidden_layers", 2, 5)
     hidden_sizes = tuple(
     trial.suggest_int(f"n_units_layer_{i}", 128, 1024, step=128)
     for i in range(num_layers)
 )
-    dropout = trial.suggest_float("dropout", 0.2, 0.5)
+    dropout = trial.suggest_float("dropout", 0.1, 0.6)
+    weight_decay = trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True)
     lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)
-    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128])
-    epochs = trial.suggest_int("epochs", 5, 15)
-
+    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512])
+    epochs = trial.suggest_int("epochs", 10, 30)
+    activation_name = trial.suggest_categorical("activation", ["relu", "leaky_relu", "gelu"])
     labels = dataset.data["label"].values
     groups = dataset.data["protein_cluster"].values
     kfold = GroupKFold(n_splits=3)
@@ -97,12 +107,12 @@ def objective(trial, input_dim, dataset):
     for train_idx, val_idx in kfold.split(np.zeros(len(labels)), labels, groups):
         train_subset = Subset(dataset, train_idx)
         val_subset = Subset(dataset, val_idx)
-        train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-        val_loader = DataLoader(val_subset, batch_size=batch_size, num_workers=4, pin_memory=True)
+        train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
+        val_loader = DataLoader(val_subset, batch_size=batch_size, num_workers=4, pin_memory=True, drop_last=True)
 
-        model = InteractionClassifier(input_dim, hidden_sizes, dropout)
+        model = InteractionClassifier(input_dim, hidden_sizes, dropout, activation_name)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        auc = train_eval_model(model, train_loader, val_loader, epochs, lr, device)
+        auc = train_eval_model(model, train_loader, val_loader, epochs, lr,weight_decay, device)
         aucs.append(auc)
 
     trial.set_user_attr("best_params", {
@@ -110,14 +120,17 @@ def objective(trial, input_dim, dataset):
         "dropout": dropout,
         "lr": lr,
         "batch_size": batch_size,
-        "epochs": epochs
+        "epochs": epochs,
+        "weight_decay": weight_decay,
+        "activation" : activation_name,
     })
     return np.mean(aucs)
 
-def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_stopping_patience=7, record_loss=False):
+def train_eval_model(model, train_loader, val_loader, epochs, lr,weight_decay, device, early_stopping_patience=7, record_loss=False):
     model.to(device)
     criterion = nn.BCEWithLogitsLoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+
     best_loss = float('inf')
     patience_counter = 0
     all_val_preds, all_val_labels = [], []
@@ -171,11 +184,12 @@ def train_eval_model(model, train_loader, val_loader, epochs, lr, device, early_
 
 
 
-def final_train_and_save(dataset, input_dim, best_params, model_path,out_dir):
-    model = InteractionClassifier(input_dim, best_params["hidden_sizes"], best_params["dropout"])
+def final_train_and_save(dataset, input_dim, best_params, model_path,out_dir,threshold):
+    activation = best_params.get("activation", "relu")
+    model = InteractionClassifier(input_dim, best_params["hidden_sizes"], best_params["dropout"],activation)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    loader = DataLoader(dataset, batch_size=best_params["batch_size"], shuffle=True,num_workers=4, pin_memory=True)
-    auc, train_curve, val_curve = train_eval_model(model, loader, loader, best_params["epochs"], best_params["lr"], device, record_loss=True)
+    loader = DataLoader(dataset, batch_size=best_params["batch_size"], shuffle=True,num_workers=4, pin_memory=True, drop_last=True)
+    auc, train_curve, val_curve = train_eval_model(model, loader, loader, best_params["epochs"], best_params["lr"],best_params['weight_decay'], device, record_loss=True)
     plt.figure()
     plt.plot(train_curve, label="Train Loss")
     plt.plot(val_curve, label="Val Loss")
@@ -183,8 +197,8 @@ def final_train_and_save(dataset, input_dim, best_params, model_path,out_dir):
     plt.ylabel("Loss")
     plt.legend()
     plt.title("Training vs Validation Loss")
-    plt.savefig(os.path.join(out_dir, "loss_curve_500.png"))
-    torch.save(model.state_dict(), model_path)
+    plt.savefig(os.path.join(out_dir, f"loss_curve_{threshold}.png"))
+    torch.save(model.state_dict(), os.path.join(out_dir, f"final_model_{threshold}.pt"))
     print(f"Saved final model to {model_path}")
     return model
 
@@ -212,13 +226,16 @@ def main():
     full_dataset = InteractionDataset(train_df, chem_lookup, prot_lookup)
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(lambda trial: objective(trial, input_dim, dataset_tune), n_trials=20)
+    study.optimize(lambda trial: objective(trial, input_dim, dataset_tune), n_trials=50)
 
     best_params = study.best_trial.user_attrs["best_params"]
+    with open(os.path.join(args.out_dir, f"optuna_best_params_{threshold}.json"), "w") as f:
+        json.dump(best_params, f, indent=2)
     print("Best hyperparameters:", best_params)
 
-    model_path = os.path.join(args.out_dir, "final_model_500.pt")
-    model = final_train_and_save(full_dataset, input_dim, best_params, model_path, args.out_dir)
+    threshold = os.path.basename(args.train).split("threshold")[-1].split("/")[0]
 
+    model_path = os.path.join(args.out_dir, f"final_model_{threshold}.pt")
+    model = final_train_and_save(full_dataset, input_dim, best_params, model_path, args.out_dir, threshold)
 if __name__ == "__main__":
     main()
