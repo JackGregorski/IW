@@ -212,6 +212,8 @@ def main():
 
     os.makedirs(args.out_dir, exist_ok=True)
 
+    threshold = os.path.basename(args.train).split("threshold")[-1].split("/")[0]
+
     train_df = pd.read_csv(args.train, sep="\t")
     chem_lookup = load_embedding_file(args.chem_fp)
     prot_lookup = load_embedding_file(args.prot_emb, embedding_col=1)
@@ -229,11 +231,13 @@ def main():
     study.optimize(lambda trial: objective(trial, input_dim, dataset_tune), n_trials=50)
 
     best_params = study.best_trial.user_attrs["best_params"]
+
+
     with open(os.path.join(args.out_dir, f"optuna_best_params_{threshold}.json"), "w") as f:
         json.dump(best_params, f, indent=2)
     print("Best hyperparameters:", best_params)
 
-    threshold = os.path.basename(args.train).split("threshold")[-1].split("/")[0]
+
 
     model_path = os.path.join(args.out_dir, f"final_model_{threshold}.pt")
     model = final_train_and_save(full_dataset, input_dim, best_params, model_path, args.out_dir, threshold)
