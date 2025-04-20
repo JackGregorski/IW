@@ -88,16 +88,17 @@ def filter_pairs(df, chem_lookup, prot_lookup):
 
 
 def objective(trial, input_dim, dataset):
-    num_layers = trial.suggest_int("num_hidden_layers", 2, 5)
+    start_time = time.time()
+    num_layers = trial.suggest_int("num_hidden_layers", 1, 4)
     hidden_sizes = tuple(
-    trial.suggest_int(f"n_units_layer_{i}", 128, 1024, step=128)
+    trial.suggest_int(f"n_units_layer_{i}", 128, 512, step=64)
     for i in range(num_layers)
 )
-    dropout = trial.suggest_float("dropout", 0.1, 0.6)
+    dropout = trial.suggest_float("dropout", 0.2, 0.5)
     weight_decay = trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True)
     lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)
     batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512])
-    epochs = trial.suggest_int("epochs", 10, 30)
+    epochs = trial.suggest_int("epochs", 10, 20)
     activation_name = trial.suggest_categorical("activation", ["relu", "leaky_relu", "gelu"])
     labels = dataset.data["label"].values
     groups = dataset.data["protein_cluster"].values
@@ -124,6 +125,7 @@ def objective(trial, input_dim, dataset):
         "weight_decay": weight_decay,
         "activation" : activation_name,
     })
+    print(f"[Trial {trial.number}] completed in {time.time() - start_time:.2f} seconds")
     return np.mean(aucs)
 
 def train_eval_model(model, train_loader, val_loader, epochs, lr,weight_decay, device, early_stopping_patience=7, record_loss=False):
@@ -225,14 +227,14 @@ def main():
     train_df = filter_pairs(train_df, chem_lookup, prot_lookup)
 
     # Use 50% of training set for tuning
-    train_df_tune = train_df.sample(frac=1, random_state=42).reset_index(drop=True)
+    train_df_tune = train_df.sample(frac=0.5, random_state=42).reset_index(drop=True)
 
     input_dim = len(next(iter(chem_lookup.values()))) + len(next(iter(prot_lookup.values())))
     dataset_tune = InteractionDataset(train_df_tune, chem_lookup, prot_lookup)
     full_dataset = InteractionDataset(train_df, chem_lookup, prot_lookup)
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(lambda trial: objective(trial, input_dim, dataset_tune), n_trials=50)
+    study.optimize(lambda trial: objective(trial, input_dim, dataset_tune), n_trials=50,timeout=7200)
 
     best_params = study.best_trial.user_attrs["best_params"]
 
