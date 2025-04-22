@@ -10,7 +10,7 @@ from sklearn.dummy import DummyClassifier
 from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_precision_score
 
 from torch.utils.data import DataLoader
-
+import re
 # Reuse your existing classes
 from kfold_classifier import InteractionClassifier, InteractionDataset, load_embedding_file, filter_pairs
 
@@ -86,8 +86,27 @@ def main():
 
         for model_path in model_files:
             model_name = os.path.splitext(os.path.basename(model_path))[0]
-            model = InteractionClassifier(input_dim=X.shape[1], hidden_sizes=[256, 256], dropout=0.3)  # override if saved
+
+
+            # Extract threshold from model filename
+            match = re.search(r"final_model_(\d+)\.pt", model_path)
+            assert match, f"Cannot extract threshold from {model_path}"
+            threshold = match.group(1)
+
+            # Load saved hyperparameters
+            config_path = os.path.join(results_dir, f"optuna_best_params_{threshold}.json")
+            with open(config_path) as f:
+                config = json.load(f)
+
+            # Build model with correct architecture
+            model = InteractionClassifier(
+                input_dim=X.shape[1],
+                hidden_sizes=config["hidden_sizes"],
+                dropout=config["dropout"],
+                activation_name=config.get("activation", "relu")
+            )
             model.load_state_dict(torch.load(model_path, map_location=device))
+
             model.to(device)
 
             preds, labels = evaluate_model(model, loader, device)
