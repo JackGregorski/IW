@@ -94,7 +94,7 @@ def main():
             threshold = match.group(1)
 
             # Load saved hyperparameters
-            config_path = os.path.join(results_dir, f"optuna_best_params_{threshold}.json")
+            config_path = os.path.join(results_dir, f"optuna_best_params_train.json")
             with open(config_path) as f:
                 config = json.load(f)
 
