@@ -62,7 +62,8 @@ def main():
     prot_lookup = load_embedding_file(prot_emb_path, embedding_col=1)
 
     test_files = sorted(glob.glob(f"{test_base_dir}/threshold*/test.tsv"))
-    model_files = sorted(glob.glob(f"{results_dir}/final_model_*.pt"))
+    model_files = sorted(glob.glob(f"{results_dir}/threshold*/final_model_*.pt"))
+
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -94,11 +95,15 @@ def main():
             threshold = match.group(1)
 
             # Load saved hyperparameters
-            config_path = os.path.join(results_dir, f"optuna_best_params_train.json")
+            threshold_dir = os.path.dirname(model_path)
+            config_path = os.path.join(threshold_dir, "optuna_best_params_train.json")
+            if not os.path.exists(config_path):
+                print(f"❌ Config file missing for model {model_path}. Skipping.")
+                continue
+
             with open(config_path) as f:
                 config = json.load(f)
 
-            # Build model with correct architecture
             model = InteractionClassifier(
                 input_dim=X.shape[1],
                 hidden_sizes=config["hidden_sizes"],
@@ -106,7 +111,6 @@ def main():
                 activation_name=config.get("activation", "relu")
             )
             model.load_state_dict(torch.load(model_path, map_location=device))
-
             model.to(device)
 
             preds, labels = evaluate_model(model, loader, device)
