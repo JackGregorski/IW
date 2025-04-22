@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#SBATCH --job-name=Eval_Models
+#SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
+#SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
+#SBATCH --time=02:00:00
+#SBATCH --mem=24G
+#SBATCH --cpus-per-task=4
+#SBATCH --gres=gpu:1
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=jg9705@princeton.edu
+#SBATCH -D /scratch/gpfs/jg9705/IW_code
+
+# Load appropriate environment
+module purge
+module load anaconda3/2023.9
+conda activate jg-torch-env
+
+echo "📊 Starting evaluation of all models on all test sets..."
+
+# Run your evaluation script (assume it's called evaluate_models.py or similar)
+python evaluate_models.py
+
+echo "✅ Model evaluation complete."
