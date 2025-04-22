@@ -23,7 +23,7 @@ OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold/threshold${THRESHOLD}"
 
 echo "Running threshold $THRESHOLD"
 
-python kfold-classifier.py \
+python kfold_classifier.py \
     --train "${TRAIN_FILE}" \
     --chem_fp "${CHEM_FP_FILE}" \
     --prot_emb "${PROT_EMB_FILE}" \
