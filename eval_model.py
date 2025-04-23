@@ -11,7 +11,6 @@ from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_prec
 from torch.utils.data import DataLoader
 import re
 
-# Reuse classes from training
 from kfold_classifier import InteractionClassifier, InteractionDataset, load_embedding_file, filter_pairs
 
 def evaluate_model(model, loader, device):
@@ -71,6 +70,7 @@ def main():
         test_df = pd.read_csv(test_path, sep="\t")
         test_df = filter_pairs(test_df, chem_lookup, prot_lookup)
         dataset = InteractionDataset(test_df, chem_lookup, prot_lookup)
+        loader = DataLoader(dataset, batch_size=64, num_workers=4)
 
         X = []
         y = []
@@ -82,16 +82,18 @@ def main():
         y = np.array(y)
 
         print(f"\n==== Test Set Threshold {test_threshold} ====")
+        all_preds = {}
 
         for model_path in model_files:
+            model_name = os.path.splitext(os.path.basename(model_path))[0]
             match = re.search(r"final_model_(\d+)\.pt", model_path)
             assert match, f"Cannot extract threshold from {model_path}"
             train_threshold = match.group(1)
 
             threshold_dir = os.path.dirname(model_path)
-            config_path = os.path.join(threshold_dir, f"optuna_best_params_{train_threshold}.json")
+            config_path = os.path.join(threshold_dir, "optuna_best_params_" + train_threshold + ".json")
             if not os.path.exists(config_path):
-                print(f"Config file missing for model {model_path}. Skipping.")
+                print(f"❌ Config file missing for model {model_path}. Skipping.")
                 continue
 
             with open(config_path) as f:
@@ -106,15 +108,13 @@ def main():
             model.load_state_dict(torch.load(model_path, map_location=device))
             model.to(device)
 
-            # Use the *trained batch size* for evaluation
-            loader = DataLoader(dataset, batch_size=config["batch_size"], num_workers=4)
-
             preds, labels = evaluate_model(model, loader, device)
-            model_name = os.path.splitext(os.path.basename(model_path))[0]
             out_base = os.path.join(results_dir, f"{model_name}_on_test{test_threshold}")
             plot_curves(labels, preds, f"{model_name} on Test {test_threshold}", out_base)
 
-        # Baseline comparisons
+            all_preds[f"model_{train_threshold}"] = (labels, preds)
+
+        # Baseline models
         log_reg = LogisticRegression(max_iter=1000).fit(X, y)
         dummy = DummyClassifier(strategy='most_frequent').fit(X, y)
 
@@ -122,6 +122,39 @@ def main():
             preds = clf.predict_proba(X)[:, 1]
             out_base = os.path.join(results_dir, f"{name}_on_test{test_threshold}")
             plot_curves(y, preds, f"{name.title()} on Test {test_threshold}", out_base)
+            all_preds[name] = (y, preds)
+
+        # Combined ROC and PR plots for this test set
+        # ROC
+        plt.figure()
+        for name, (labels, preds) in all_preds.items():
+            fpr, tpr, _ = roc_curve(labels, preds)
+            roc_auc = auc(fpr, tpr)
+            plt.plot(fpr, tpr, label=f"{name} (AUC={roc_auc:.2f})")
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title(f"Combined ROC - Test {test_threshold}")
+        plt.legend()
+        plt.savefig(os.path.join(results_dir, f"combined_ROC_on_test{test_threshold}.png"))
+        plt.close()
+
+        # PR
+        plt.figure()
+        for name, (labels, preds) in all_preds.items():
+            if name == "dummy":
+                pos_ratio = np.mean(labels)
+                plt.plot([0, 1], [pos_ratio, pos_ratio], '--', label=f"{name} (baseline @ {pos_ratio:.2f})")
+            else:
+                precision, recall, _ = precision_recall_curve(labels, preds)
+                pr_auc = average_precision_score(labels, preds)
+                plt.plot(recall, precision, label=f"{name} (AP={pr_auc:.2f})")
+        plt.xlabel("Recall")
+        plt.ylabel("Precision")
+        plt.title(f"Combined PR - Test {test_threshold}")
+        plt.legend()
+        plt.savefig(os.path.join(results_dir, f"combined_PR_on_test{test_threshold}.png"))
+        plt.close()
 
 if __name__ == "__main__":
     main()
