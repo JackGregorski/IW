@@ -219,7 +219,9 @@ def main():
 
     os.makedirs(args.out_dir, exist_ok=True)
 
-    threshold = os.path.basename(args.train).split("threshold")[-1].split(".")[0]
+
+    threshold = os.path.basename(os.path.dirname(args.train)).replace("threshold", "")
+
 
 
     train_df = pd.read_csv(args.train, sep="\t")
@@ -229,7 +231,7 @@ def main():
     train_df = filter_pairs(train_df, chem_lookup, prot_lookup)
 
     # Use 50% of training set for tuning
-    train_df_tune = train_df.sample(frac=0.5, random_state=42).reset_index(drop=True)
+    train_df_tune = train_df.sample(frac=0.01, random_state=42).reset_index(drop=True)
 
     input_dim = len(next(iter(chem_lookup.values()))) + len(next(iter(prot_lookup.values())))
     dataset_tune = InteractionDataset(train_df_tune, chem_lookup, prot_lookup)
