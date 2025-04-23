@@ -97,7 +97,7 @@ def objective(trial, input_dim, dataset):
     dropout = trial.suggest_float("dropout", 0.2, 0.5)
     weight_decay = trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True)
     lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)
-    batch_size = trial.suggest_categorical("batch_size", [128, 256, 512,1024])
+    batch_size = trial.suggest_categorical("batch_size", [64, 128, 256, 512,1024])
     epochs = trial.suggest_int("epochs", 10, 20)
     activation_name = trial.suggest_categorical("activation", ["relu", "leaky_relu", "gelu"])
     labels = dataset.data["label"].values
@@ -207,6 +207,13 @@ def final_train_and_save(dataset, input_dim, best_params, model_path,out_dir,thr
     plt.savefig(os.path.join(out_dir, f"loss_curve_{threshold}.png"))
     torch.save(model.state_dict(), os.path.join(out_dir, f"final_model_{threshold}.pt"))
     print(f"Saved final model to {model_path}")
+    model_meta = {
+        "input_dim": input_dim,
+        "threshold": threshold,
+        "best_params": best_params
+    }
+    with open(os.path.join(out_dir, f"model_metadata_{threshold}.json"), "w") as f:
+        json.dump(model_meta, f, indent=2)
     return model
 
 def main():
@@ -238,7 +245,7 @@ def main():
     full_dataset = InteractionDataset(train_df, chem_lookup, prot_lookup)
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(lambda trial: objective(trial, input_dim, dataset_tune), n_trials=20,timeout=7200)
+    study.optimize(lambda trial: objective(trial, input_dim, dataset_tune), n_trials=30,timeout=7200)
 
     best_params = study.best_trial.user_attrs["best_params"]
 
