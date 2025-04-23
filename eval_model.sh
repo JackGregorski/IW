@@ -6,7 +6,6 @@
 #SBATCH --time=01:00:00
 #SBATCH --mem=24G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:1
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=jg9705@princeton.edu
 #SBATCH -D /scratch/gpfs/jg9705/IW_code

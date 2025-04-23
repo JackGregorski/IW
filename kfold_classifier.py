@@ -16,7 +16,7 @@ import optuna
 import os
 import json
 import argparse
-
+num_workers = min(os.cpu_count(), 8)
 class InteractionDataset(Dataset):
     def __init__(self, df, chem_lookup, prot_lookup):
         self.data = df
@@ -97,7 +97,7 @@ def objective(trial, input_dim, dataset):
     dropout = trial.suggest_float("dropout", 0.2, 0.5)
     weight_decay = trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True)
     lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)
-    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256, 512])
+    batch_size = trial.suggest_categorical("batch_size", [128, 256, 512,1024])
     epochs = trial.suggest_int("epochs", 10, 20)
     activation_name = trial.suggest_categorical("activation", ["relu", "leaky_relu", "gelu"])
     labels = dataset.data["label"].values
@@ -108,8 +108,9 @@ def objective(trial, input_dim, dataset):
     for train_idx, val_idx in kfold.split(np.zeros(len(labels)), labels, groups):
         train_subset = Subset(dataset, train_idx)
         val_subset = Subset(dataset, val_idx)
-        train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
-        val_loader = DataLoader(val_subset, batch_size=batch_size, num_workers=4, pin_memory=True, drop_last=True)
+
+        train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True, drop_last=True)
+        val_loader = DataLoader(val_subset, batch_size=batch_size, num_workers=num_workers, pin_memory=True, drop_last=True)
 
         model = InteractionClassifier(input_dim, hidden_sizes, dropout, activation_name)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -199,8 +200,6 @@ def final_train_and_save(dataset, input_dim, best_params, model_path,out_dir,thr
     epochs_range = list(range(1, len(train_curve) + 1))
     plt.plot(epochs_range, train_curve, label="Train Loss")
     plt.plot(epochs_range, val_curve, label="Val Loss")
-    plt.plot(train_curve, label="Train Loss")
-    plt.plot(val_curve, label="Val Loss")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()

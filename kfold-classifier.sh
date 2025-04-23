@@ -29,4 +29,4 @@ python kfold_classifier.py \
     --prot_emb "${PROT_EMB_FILE}" \
     --out_dir "${OUT_DIR}"
 
-echo "✅ Done with threshold $THRESHOLD"
+echo "Done with threshold $THRESHOLD"
