@@ -188,7 +188,7 @@ def train_eval_model(model, train_loader, val_loader, epochs, lr,weight_decay, d
 
 def final_train_and_save(dataset, input_dim, best_params, model_path,out_dir,threshold):
     if os.path.exists(model_path):
-        print(f"⚠️ Overwriting existing model at {model_path}")
+        print(f"Overwriting existing model at {model_path}")
         os.remove(model_path)
     activation = best_params.get("activation", "relu")
     model = InteractionClassifier(input_dim, best_params["hidden_sizes"], best_params["dropout"],activation)
