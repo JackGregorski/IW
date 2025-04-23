@@ -16,7 +16,7 @@ import optuna
 import os
 import json
 import argparse
-num_workers = min(os.cpu_count(), 8)
+num_workers = 4
 class InteractionDataset(Dataset):
     def __init__(self, df, chem_lookup, prot_lookup):
         self.data = df
@@ -238,7 +238,7 @@ def main():
     full_dataset = InteractionDataset(train_df, chem_lookup, prot_lookup)
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(lambda trial: objective(trial, input_dim, dataset_tune), n_trials=50,timeout=7200)
+    study.optimize(lambda trial: objective(trial, input_dim, dataset_tune), n_trials=20,timeout=7200)
 
     best_params = study.best_trial.user_attrs["best_params"]
 
