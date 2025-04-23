@@ -69,17 +69,17 @@ def main():
         test_threshold = os.path.basename(os.path.dirname(test_path)).replace("threshold", "")
         test_df = pd.read_csv(test_path, sep="\t")
         test_df = filter_pairs(test_df, chem_lookup, prot_lookup)
-        dataset = InteractionDataset(test_df, chem_lookup, prot_lookup)
-        loader = DataLoader(dataset, batch_size=64, num_workers=4)
+        test_dataset = InteractionDataset(test_df, chem_lookup, prot_lookup)
+        test_loader = DataLoader(test_dataset, batch_size=64, num_workers=4)
 
-        X = []
-        y = []
-        for i in range(len(dataset)):
-            x_i, y_i = dataset[i]
-            X.append(x_i.numpy())
-            y.append(y_i.item())
-        X = np.stack(X)
-        y = np.array(y)
+        X_test = []
+        y_test = []
+        for i in range(len(test_dataset)):
+            x_i, y_i = test_dataset[i]
+            X_test.append(x_i.numpy())
+            y_test.append(y_i.item())
+        X_test = np.stack(X_test)
+        y_test = np.array(y_test)
 
         print(f"\n==== Test Set Threshold {test_threshold} ====")
         all_preds = {}
@@ -91,7 +91,7 @@ def main():
             train_threshold = match.group(1)
 
             threshold_dir = os.path.dirname(model_path)
-            config_path = os.path.join(threshold_dir, "optuna_best_params_" + train_threshold + ".json")
+            config_path = os.path.join(threshold_dir, f"optuna_best_params_{train_threshold}.json")
             if not os.path.exists(config_path):
                 print(f"❌ Config file missing for model {model_path}. Skipping.")
                 continue
@@ -100,7 +100,7 @@ def main():
                 config = json.load(f)
 
             model = InteractionClassifier(
-                input_dim=X.shape[1],
+                input_dim=X_test.shape[1],
                 hidden_sizes=config["hidden_sizes"],
                 dropout=config["dropout"],
                 activation_name=config.get("activation", "relu")
@@ -108,24 +108,37 @@ def main():
             model.load_state_dict(torch.load(model_path, map_location=device))
             model.to(device)
 
-            preds, labels = evaluate_model(model, loader, device)
+            preds, labels = evaluate_model(model, test_loader, device)
             out_base = os.path.join(results_dir, f"{model_name}_on_test{test_threshold}")
             plot_curves(labels, preds, f"{model_name} on Test {test_threshold}", out_base)
 
             all_preds[f"model_{train_threshold}"] = (labels, preds)
 
-        # Baseline models
-        log_reg = LogisticRegression(max_iter=1000).fit(X, y)
-        dummy = DummyClassifier(strategy='most_frequent').fit(X, y)
+        # Baseline models — now train logistic on train set for this threshold
+        train_path = os.path.join(test_base_dir, f"threshold{test_threshold}", "train.tsv")
+        train_df = pd.read_csv(train_path, sep="\t")
+        train_df = filter_pairs(train_df, chem_lookup, prot_lookup)
+        train_dataset = InteractionDataset(train_df, chem_lookup, prot_lookup)
+
+        X_train = []
+        y_train = []
+        for i in range(len(train_dataset)):
+            x_i, y_i = train_dataset[i]
+            X_train.append(x_i.numpy())
+            y_train.append(y_i.item())
+        X_train = np.stack(X_train)
+        y_train = np.array(y_train)
+
+        log_reg = LogisticRegression(max_iter=1000).fit(X_train, y_train)
+        dummy = DummyClassifier(strategy='most_frequent').fit(X_train, y_train)
 
         for name, clf in [("logistic", log_reg), ("dummy", dummy)]:
-            preds = clf.predict_proba(X)[:, 1]
+            preds = clf.predict_proba(X_test)[:, 1]
             out_base = os.path.join(results_dir, f"{name}_on_test{test_threshold}")
-            plot_curves(y, preds, f"{name.title()} on Test {test_threshold}", out_base)
-            all_preds[name] = (y, preds)
+            plot_curves(y_test, preds, f"{name.title()} on Test {test_threshold}", out_base)
+            all_preds[name] = (y_test, preds)
 
         # Combined ROC and PR plots for this test set
-        # ROC
         plt.figure()
         for name, (labels, preds) in all_preds.items():
             fpr, tpr, _ = roc_curve(labels, preds)
@@ -139,7 +152,6 @@ def main():
         plt.savefig(os.path.join(results_dir, f"combined_ROC_on_test{test_threshold}.png"))
         plt.close()
 
-        # PR
         plt.figure()
         for name, (labels, preds) in all_preds.items():
             if name == "dummy":
