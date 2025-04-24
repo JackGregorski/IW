@@ -4,6 +4,8 @@
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/KFold_%A_%a.err
 #SBATCH --array=400,500,600,700,800,900      # Run one job per threshold
 #SBATCH --time=03:00:00
+#SBATCH --gres=gpu:1
+#SBATCH --mem=32G
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
