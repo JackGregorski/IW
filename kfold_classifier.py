@@ -16,7 +16,7 @@ import optuna
 import os
 import json
 import argparse
-num_workers = 8
+num_workers = 1
 class InteractionDataset(Dataset):
     def __init__(self, df, chem_lookup, prot_lookup):
         self.data = df
