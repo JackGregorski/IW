@@ -97,7 +97,7 @@ def main():
         test_df = pd.read_csv(test_path, sep="\t")
         test_df = filter_pairs(test_df, chem_lookup, prot_lookup)
         test_dataset = InteractionDataset(test_df, chem_lookup, prot_lookup)
-        test_loader = DataLoader(test_dataset, batch_size=64, num_workers=4)
+        test_loader = DataLoader(test_dataset, batch_size=64, num_workers=3)
 
         X_test = []
         y_test = []

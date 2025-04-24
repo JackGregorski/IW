@@ -16,7 +16,7 @@ import optuna
 import os
 import json
 import argparse
-num_workers = 4
+num_workers = 8
 class InteractionDataset(Dataset):
     def __init__(self, df, chem_lookup, prot_lookup):
         self.data = df
@@ -194,7 +194,7 @@ def final_train_and_save(dataset, input_dim, best_params, model_path,out_dir,thr
     activation = best_params.get("activation", "relu")
     model = InteractionClassifier(input_dim, best_params["hidden_sizes"], best_params["dropout"],activation)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    loader = DataLoader(dataset, batch_size=best_params["batch_size"], shuffle=True,num_workers=4, pin_memory=True, drop_last=True)
+    loader = DataLoader(dataset, batch_size=best_params["batch_size"], shuffle=True,num_workers=num_workers, pin_memory=True, drop_last=True)
     auc, train_curve, val_curve = train_eval_model(model, loader, loader, best_params["epochs"], best_params["lr"],best_params['weight_decay'], device, record_loss=True)
     plt.figure()
     epochs_range = list(range(1, len(train_curve) + 1))
