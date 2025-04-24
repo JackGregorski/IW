@@ -68,8 +68,8 @@ def plot_curves(y_true, y_pred, title, out_path_base):
 
     # NEW: Threshold diagnostics (TPR & FPR vs Threshold)
     plt.figure()
-    plt.plot(roc_thresholds, tpr[:-1], label='TPR')  # Remove last point to match length
-    plt.plot(roc_thresholds, fpr[:-1], label='FPR')
+    plt.plot(roc_thresholds, tpr[1:], label='TPR')  # Match length
+    plt.plot(roc_thresholds, fpr[1:], label='FPR')  # Match length
     plt.xlabel("Threshold")
     plt.ylabel("Rate")
     plt.title(f"TPR and FPR vs Threshold: {title}")
