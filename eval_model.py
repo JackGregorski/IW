@@ -114,7 +114,7 @@ def main():
 
             all_preds[f"model_{train_threshold}"] = (labels, preds)
 
-        # Baseline models — now train logistic on train set for this threshold
+        # Baseline models (trained on training data from the same threshold)
         train_path = os.path.join(test_base_dir, f"threshold{test_threshold}", "train.tsv")
         train_df = pd.read_csv(train_path, sep="\t")
         train_df = filter_pairs(train_df, chem_lookup, prot_lookup)
@@ -138,7 +138,7 @@ def main():
             plot_curves(y_test, preds, f"{name.title()} on Test {test_threshold}", out_base)
             all_preds[name] = (y_test, preds)
 
-        # Combined ROC and PR plots for this test set
+        # Combined ROC and PR plots
         plt.figure()
         for name, (labels, preds) in all_preds.items():
             fpr, tpr, _ = roc_curve(labels, preds)
