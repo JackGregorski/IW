@@ -26,11 +26,17 @@ def evaluate_model(model, loader, device):
     return np.array(preds), np.array(labels)
 
 def plot_curves(y_true, y_pred, title, out_path_base):
-    fpr, tpr, _ = roc_curve(y_true, y_pred)
-    precision, recall, _ = precision_recall_curve(y_true, y_pred)
+    from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_precision_score
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # ROC and PR curves
+    fpr, tpr, roc_thresholds = roc_curve(y_true, y_pred)
+    precision, recall, pr_thresholds = precision_recall_curve(y_true, y_pred)
     roc_auc = auc(fpr, tpr)
     pr_auc = average_precision_score(y_true, y_pred)
 
+    # ROC plot
     plt.figure()
     plt.plot(fpr, tpr, label=f'ROC AUC = {roc_auc:.2f}')
     plt.plot([0, 1], [0, 1], 'k--')
@@ -41,6 +47,7 @@ def plot_curves(y_true, y_pred, title, out_path_base):
     plt.savefig(out_path_base + "_roc.png")
     plt.close()
 
+    # PR plot
     plt.figure()
     plt.plot(recall, precision, label=f'PR AUC = {pr_auc:.2f}')
     plt.xlabel('Recall')
@@ -48,6 +55,26 @@ def plot_curves(y_true, y_pred, title, out_path_base):
     plt.title(f'Precision-Recall: {title}')
     plt.legend()
     plt.savefig(out_path_base + "_pr.png")
+    plt.close()
+
+    # NEW: Histogram of predicted probabilities
+    plt.figure()
+    plt.hist(y_pred, bins=50)
+    plt.xlabel("Predicted Probability")
+    plt.ylabel("Count")
+    plt.title(f"Predicted Probability Histogram: {title}")
+    plt.savefig(out_path_base + "_pred_hist.png")
+    plt.close()
+
+    # NEW: Threshold diagnostics (TPR & FPR vs Threshold)
+    plt.figure()
+    plt.plot(roc_thresholds, tpr[:-1], label='TPR')  # Remove last point to match length
+    plt.plot(roc_thresholds, fpr[:-1], label='FPR')
+    plt.xlabel("Threshold")
+    plt.ylabel("Rate")
+    plt.title(f"TPR and FPR vs Threshold: {title}")
+    plt.legend()
+    plt.savefig(out_path_base + "_threshold_diagnostics.png")
     plt.close()
 
 def main():
