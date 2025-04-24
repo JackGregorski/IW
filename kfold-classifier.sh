@@ -3,8 +3,8 @@
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/KFold_%A_%a.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/KFold_%A_%a.err
 #SBATCH --array=400,500,600,700,800,900      # Run one job per threshold
-#SBATCH --time=04:00:00
-#SBATCH --mem=16G
+#SBATCH --time=03:00:00
+#SBATCH --mem=24G
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mail-type=BEGIN,END,FAIL
@@ -19,7 +19,7 @@ THRESHOLD=${SLURM_ARRAY_TASK_ID}
 TRAIN_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/threshold${THRESHOLD}/train.tsv"
 CHEM_FP_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/molecular_fingerprints.tsv"
 PROT_EMB_FILE="/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
-OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold/threshold${THRESHOLD}"
+OUT_DIR="/scratch/gpfs/jg9705/IW_code/results_kfold_final/threshold${THRESHOLD}"
 
 echo "Running threshold $THRESHOLD"
 

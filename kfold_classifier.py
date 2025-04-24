@@ -237,8 +237,14 @@ def main():
 
     train_df = filter_pairs(train_df, chem_lookup, prot_lookup)
 
-    # Use 50% of training set for tuning
-    train_df_tune = train_df.sample(frac=0.01, random_state=42).reset_index(drop=True)
+    # Dynamically scale tuning sample size by threshold
+    threshold_int = int(threshold)
+    min_frac, max_frac = 0.1, 1.0
+    scaled_frac = min_frac + (max_frac - min_frac) * ((threshold_int - 400) / (900 - 400))
+    scaled_frac = min(max(scaled_frac, min_frac), max_frac)  # Clamp between 0.1 and 1.0
+
+    train_df_tune = train_df.sample(frac=scaled_frac, random_state=42).reset_index(drop=True)
+    print(f"Sampling {scaled_frac:.2f} of training data for threshold {threshold}")
 
     input_dim = len(next(iter(chem_lookup.values()))) + len(next(iter(prot_lookup.values())))
     dataset_tune = InteractionDataset(train_df_tune, chem_lookup, prot_lookup)
