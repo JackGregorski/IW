@@ -4,7 +4,7 @@
 #SBATCH --output=/scratch/gpfs/jg9705/IW_logs/%x.out
 #SBATCH --error=/scratch/gpfs/jg9705/IW_logs/%x.err
 #SBATCH --time=01:00:00
-#SBATCH --mem=256G
+#SBATCH --mem=80G
 #SBATCH --cpus-per-task=3
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=jg9705@princeton.edu
