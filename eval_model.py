@@ -10,6 +10,7 @@ from sklearn.dummy import DummyClassifier
 from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_precision_score
 from torch.utils.data import DataLoader
 import re
+import seaborn as sns
 
 from kfold_classifier import InteractionClassifier, InteractionDataset, load_embedding_file, filter_pairs
 
@@ -202,6 +203,43 @@ def main():
         plt.close()
 
         print(f"Combined plots for Test Threshold {test_threshold} saved.\n")
+
+
+
+        out_heatmap_dir = os.path.join(results_dir, "heatmaps")
+        os.makedirs(out_heatmap_dir, exist_ok=True)
+
+        out_resource_dir = os.path.join(results_dir, "figure_resources")
+        os.makedirs(out_resource_dir, exist_ok=True)
+
+        models = sorted(set(train for (train, test) in metrics['Accuracy'].keys()))
+        tests = sorted(set(test for (train, test) in metrics['Accuracy'].keys()))
+
+        for metric_name, values in metrics.items():
+            # Create matrix for plotting
+            heatmap_data = np.zeros((len(models), len(tests)))
+
+            for i, train_threshold in enumerate(models):
+                for j, test_threshold in enumerate(tests):
+                    heatmap_data[i, j] = values.get((train_threshold, test_threshold), np.nan)
+
+            df_heatmap = pd.DataFrame(heatmap_data, index=models, columns=tests)
+
+            # Save heatmap figure
+            plt.figure(figsize=(10, 8))
+            sns.heatmap(df_heatmap, annot=True, fmt=".3f", cmap="viridis")
+            plt.title(f"{metric_name} Heatmap (Train vs Test Thresholds)")
+            plt.xlabel("Test Threshold")
+            plt.ylabel("Train Threshold")
+            plt.tight_layout()
+            plt.savefig(os.path.join(out_heatmap_dir, f"{metric_name.replace(' ', '_')}_heatmap.png"))
+            plt.close()
+
+            # Save raw matrix as JSON
+            matrix_dict = df_heatmap.to_dict(orient="index")
+            with open(os.path.join(out_resource_dir, f"{metric_name.replace(' ', '_')}_matrix.json"), "w") as f:
+                json.dump(matrix_dict, f, indent=2)
+
 
 if __name__ == "__main__":
     main()
