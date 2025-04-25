@@ -1,0 +1,25 @@
+splits.zip
+
+
+# Ignore training and test data
+splits/
+**/splits/
+
+# Ignore model outputs and evaluation results
+results_kfold/
+**/results_kfold/
+
+# Ignore resource files (embeddings, fingerprints)
+Model Resources/
+**/Model Resources/
+
+# Common Python ignores
+__pycache__/
+*.py[cod]
+*.pkl
+*.pt
+*.log
+
+# VSCode & Colab
+.vscode/
+.ipynb_checkpoints/
