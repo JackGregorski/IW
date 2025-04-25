@@ -72,7 +72,7 @@ def main():
     base_dir = "/scratch/gpfs/jg9705/IW_code"
     chem_fp_path = os.path.join(base_dir, "Model_Resources/molecular_fingerprints.tsv")
     prot_emb_path = os.path.join(base_dir, "Model_Resources/encodings.tsv")
-    results_dir = os.path.join(base_dir, "results_kfold")
+    results_dir = os.path.join(base_dir, "results_kfold_final/final_figures")
     test_base_dir = os.path.join(base_dir, "Model_Resources/splits")
 
     chem_lookup = load_embedding_file(chem_fp_path)
