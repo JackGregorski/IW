@@ -7,9 +7,9 @@ from kfold_classifier import load_embedding_file, filter_pairs, InteractionDatas
 # === Paths ===
 threshold = 400
 base_dir = "/scratch/gpfs/jg9705/IW_code/results_kfold_final"
-train_path = f"/scratch/gpfs/jg9705/IW_code/splits/threshold{threshold}/train.tsv"
-chem_fp_path = "/scratch/gpfs/jg9705/IW_code/Model Resources/chem_lookup.tsv"
-prot_emb_path = "/scratch/gpfs/jg9705/IW_code/Model Resources/prot_lookup.tsv"
+train_path = f"/scratch/gpfs/jg9705/IW_code/Model_Resources/splits/threshold{threshold}/train.tsv"
+chem_fp_path = "/scratch/gpfs/jg9705/IW_code/Model_Resources/molecular_fingerprints.tsv"
+prot_emb_path = "/scratch/gpfs/jg9705/IW_code/Model_Resources/encodings.tsv"
 params_path = f"{base_dir}/threshold{threshold}/optuna_best_params_{threshold}.json"
 out_dir = f"{base_dir}/threshold{threshold}"
 model_path = os.path.join(out_dir, f"final_model_{threshold}.pt")
