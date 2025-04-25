@@ -11,6 +11,6 @@
 
 module purge
 module load anaconda3/2023.9
-conda activate torch-env
+conda activate jg-torch-env
 
 python train_threshold400.py
