@@ -123,7 +123,7 @@ def main():
 
             batch_size = config.get("batch_size", 64)
             print(f"Using batch size: {batch_size}")
-            test_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=3)
+            test_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=4)
 
             model = InteractionClassifier(
                 input_dim=X_test.shape[1],
