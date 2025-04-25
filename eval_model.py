@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.dummy import DummyClassifier
-from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_precision_score, precision_score, recall_score, f1_score, brier_score_loss, log_loss
+from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_precision_score, precision_score, recall_score, f1_score, brier_score_loss, log_loss,roc_auc_score
 from torch.utils.data import DataLoader
 import re
 import seaborn as sns
@@ -73,7 +73,8 @@ def main():
     base_dir = "/scratch/gpfs/jg9705/IW_code"
     chem_fp_path = os.path.join(base_dir, "Model_Resources/molecular_fingerprints.tsv")
     prot_emb_path = os.path.join(base_dir, "Model_Resources/encodings.tsv")
-    results_dir = os.path.join(base_dir, "results_kfold_final/final_figures")
+    results_dir = os.path.join(base_dir, "results_kfold_final")
+    out_dir = os.path.join(results_dir, "final_figures")
     test_base_dir = os.path.join(base_dir, "Model_Resources/splits")
 
     chem_lookup = load_embedding_file(chem_fp_path)
@@ -160,7 +161,7 @@ def main():
             metrics["Brier Score"][(train_threshold, test_threshold)] = brier_score_loss(labels, preds)
             metrics["Log Loss"][(train_threshold, test_threshold)] = log_loss(labels, preds, labels=[0, 1])
 
-            out_base = os.path.join(results_dir, f"{model_name}_on_test{test_threshold}")
+            out_base = os.path.join(out_dir, f"{model_name}_on_test{test_threshold}")
             print("Plotting curves...")
             plot_curves(labels, preds, f"{model_name} on Test {test_threshold}", out_base)
             print("Curves plotted and saved.")
