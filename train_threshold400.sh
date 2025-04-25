@@ -13,4 +13,4 @@ module purge
 module load anaconda3/2023.9
 conda activate torch-env
 
-python /scratch/gpfs/jg9705/IW_code/retrain_threshold400.py
+python train_threshold400.py
