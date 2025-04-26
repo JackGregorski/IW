@@ -9,7 +9,7 @@ import pandas as pd
 import json
 # Paths (adjust if necessary)
 base_dir = "/scratch/gpfs/jg9705/IW_code"
-model_path = os.path.join(base_dir, "results_kfold_final/threshold600/final_model_train.pt")
+model_path = os.path.join(base_dir, "results_kfold_final/threshold600/final_model_600.pt")
 config_path = os.path.join(base_dir, "results_kfold_final/threshold600/optuna_best_params_600.json")
 test_path = os.path.join(base_dir, "Model_Resources/splits/threshold900/test.tsv")  # Best test set
 chem_fp_path = os.path.join(base_dir, "Model_Resources/molecular_fingerprints.tsv")
