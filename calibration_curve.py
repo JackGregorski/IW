@@ -5,7 +5,8 @@ from sklearn.calibration import calibration_curve
 import os
 from kfold_classifier import InteractionClassifier, load_embedding_file, InteractionDataset, filter_pairs
 from torch.utils.data import DataLoader
-
+import pandas as pd
+import json
 # Paths (adjust if necessary)
 base_dir = "/scratch/gpfs/jg9705/IW_code"
 model_path = os.path.join(base_dir, "results_kfold_final/threshold600/final_model_train.pt")
